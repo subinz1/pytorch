@@ -45,9 +45,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Linux
-        uses: ./.github/actions/setup-linux
-
       - name: Build RHEL 9 Docker image
         run: |
           cd .ci/docker/rhel9
