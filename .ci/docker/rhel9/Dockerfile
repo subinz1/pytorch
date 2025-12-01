@@ -137,9 +137,13 @@ COPY ./common/install_jni.sh install_jni.sh
 COPY ./java/jni.h jni.h
 RUN bash ./install_jni.sh && rm install_jni.sh
 
-ENV PATH /opt/conda/bin:$PATH
+# Set PATH with CUDA before conda to ensure nvcc is found
+ARG CUDA_VERSION=12.6
+ENV PATH /usr/local/cuda-${CUDA_VERSION}/bin:/opt/conda/bin:$PATH
+ENV CUDA_HOME /usr/local/cuda-${CUDA_VERSION}
+ENV LD_LIBRARY_PATH /usr/local/cuda-${CUDA_VERSION}/lib64:$LD_LIBRARY_PATH
 COPY --from=mnist  /usr/local/mnist /usr/local/mnist
-RUN rm -rf /usr/local/cuda
+# Don't remove CUDA - we need it! Comment out: RUN rm -rf /usr/local/cuda
 RUN chmod o+rw /usr/local
 RUN touch /.condarc && \
     chmod o+rw /.condarc && \
