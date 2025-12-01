@@ -70,6 +70,9 @@ docker build \
   -f "${TOPDIR}/.ci/docker/rhel9/Dockerfile" \
   ${TOPDIR}/.ci/docker/
 
+# Tag the image with the expected name
+docker tag ${tmp_tag} ${image}
+
 if [ -n "${CUDA_VERSION}" ]; then
   # Test that we're using the right CUDA compiler
   docker run --rm "${tmp_tag}" nvcc --version | grep "cuda_${CUDA_VERSION}"
