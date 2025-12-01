@@ -1,3 +1,4 @@
+# RHEL 9.6 Docker image for PyTorch CI
 ARG CUDA_VERSION=12.6
 ARG BASE_TARGET=cuda${CUDA_VERSION}
 FROM docker.io/redhat/ubi9:9.6 as base
