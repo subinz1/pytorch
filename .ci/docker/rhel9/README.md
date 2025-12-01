@@ -10,13 +10,13 @@ The build supports optional RHEL subscription registration for accessing additio
 
 If you need to use RHEL subscription:
 
-1. **Create credential files on your runner machine:**
+1. **Create credential files in your home directory:**
 
 ```bash
-sudo mkdir -p /etc/rhsm
-echo "YOUR_ORG_ID" | sudo tee /etc/rhsm/rhsm-org
-echo "YOUR_ACTIVATION_KEY" | sudo tee /etc/rhsm/rhsm-activationkey
-sudo chmod 600 /etc/rhsm/rhsm-*
+mkdir -p ~/.rhsm
+echo "YOUR_ORG_ID" > ~/.rhsm/rhsm-org
+echo "YOUR_ACTIVATION_KEY" > ~/.rhsm/rhsm-activationkey
+chmod 600 ~/.rhsm/rhsm-*
 ```
 
 2. **The build script will automatically detect these files** and enable subscription during the Docker build.
@@ -54,6 +54,6 @@ If the credential files are not found, the build will proceed using only UBI (Un
 
 ## Environment Variables
 
-- `RHSM_ORG_FILE` - Path to file containing RHEL organization ID (default: `/etc/rhsm/rhsm-org`)
-- `RHSM_KEY_FILE` - Path to file containing RHEL activation key (default: `/etc/rhsm/rhsm-activationkey`)
+- `RHSM_ORG_FILE` - Path to file containing RHEL organization ID (default: `~/.rhsm/rhsm-org`)
+- `RHSM_KEY_FILE` - Path to file containing RHEL activation key (default: `~/.rhsm/rhsm-activationkey`)
 - `DOCKER_BUILDKIT` - Enable Docker BuildKit (automatically set to 1)

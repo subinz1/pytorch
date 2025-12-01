@@ -48,8 +48,8 @@ tmp_tag=$(basename "$(mktemp -u)" | tr '[:upper:]' '[:lower:]')
 
 # Check for RHEL subscription credentials
 SUBSCRIPTION_ARGS=""
-RHSM_ORG_FILE="${RHSM_ORG_FILE:-/etc/rhsm/rhsm-org}"
-RHSM_KEY_FILE="${RHSM_KEY_FILE:-/etc/rhsm/rhsm-activationkey}"
+RHSM_ORG_FILE="${RHSM_ORG_FILE:-$HOME/.rhsm/rhsm-org}"
+RHSM_KEY_FILE="${RHSM_KEY_FILE:-$HOME/.rhsm/rhsm-activationkey}"
 
 if [ -f "${RHSM_ORG_FILE}" ] && [ -f "${RHSM_KEY_FILE}" ]; then
     echo "RHEL subscription credentials found, enabling subscription"
