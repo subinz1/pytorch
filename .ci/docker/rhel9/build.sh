@@ -37,9 +37,10 @@ esac
 
 # TODO: Remove LimitNOFILE=1048576 patch once https://github.com/pytorch/test-infra/issues/5712
 # is resolved. This patch is required in order to fix timing out of Docker build on Amazon Linux 2023.
-sudo sed -i s/LimitNOFILE=infinity/LimitNOFILE=1048576/ /usr/lib/systemd/system/docker.service
-sudo systemctl daemon-reload
-sudo systemctl restart docker
+# Commented out for self-hosted runners - not needed
+# sed -i s/LimitNOFILE=infinity/LimitNOFILE=1048576/ /usr/lib/systemd/system/docker.service
+# systemctl daemon-reload
+# systemctl restart docker
 
 export DOCKER_BUILDKIT=1
 TOPDIR=$(git rev-parse --show-toplevel)
