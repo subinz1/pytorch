@@ -66,7 +66,6 @@ jobs:
   rhel-9_6-py3_12-gcc11-build:
     name: rhel-9.6-py3.12-gcc11
     uses: ./.github/workflows/_linux-build.yml
-    needs: get-label-type
     with:
       runner_prefix: ""
       runner: "git-runner-qa"
