@@ -30,7 +30,8 @@ RUN dnf -y update && \
     dnf -y install glibc-langpack-en
 
 # Install build tools and dependencies
-RUN dnf install -y \
+# Use --allowerasing to resolve curl/curl-minimal conflict
+RUN dnf install -y --allowerasing \
     sudo \
     wget \
     curl \

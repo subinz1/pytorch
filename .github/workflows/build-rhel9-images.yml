@@ -72,11 +72,10 @@ jobs:
         run: |
           docker run --rm ci-image:pytorch-rhel-9.6-py3.12-gcc11-${{ matrix.tag }} bash -c "gcc --version && g++ --version && cmake --version"
 
-      - name: Cleanup workspace
+      - name: Cleanup custom workspace
         if: always()
         shell: bash
         run: |
           echo "Cleaning up custom workspace: ${WORK_DIR}"
           rm -rf "${WORK_DIR}"
-          echo "Cleaning up default workspace: ${GITHUB_WORKSPACE}"
-          rm -rf "${GITHUB_WORKSPACE}"
+          echo "Cleanup complete"
