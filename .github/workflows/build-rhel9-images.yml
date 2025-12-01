@@ -33,24 +33,25 @@ jobs:
       matrix:
         tag: ["cuda12.8"]
     steps:
-      - name: Set working directory
+      - name: Checkout PyTorch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Move to custom working directory
         shell: bash
         run: |
           WORK_DIR="/mnt/builds_2/users/gitlab-runner/${GITHUB_RUN_ID}"
           echo "WORK_DIR=${WORK_DIR}" >> $GITHUB_ENV
           mkdir -p "${WORK_DIR}"
+          echo "Moving workspace to ${WORK_DIR}"
+          rsync -a "${GITHUB_WORKSPACE}/" "${WORK_DIR}/"
           cd "${WORK_DIR}"
 
-      - name: Checkout PyTorch
-        uses: actions/checkout@v4
-        with:
-          path: ${{ env.WORK_DIR }}/pytorch
-          fetch-depth: 0
-
       - name: Build RHEL 9 Docker image
-        working-directory: ${{ env.WORK_DIR }}/pytorch
+        shell: bash
         run: |
-          cd .ci/docker/rhel9
+          cd "${WORK_DIR}/.ci/docker/rhel9"
           ./build.sh rhel9-builder:${{ matrix.tag }}
 
       - name: Tag image
@@ -75,5 +76,7 @@ jobs:
         if: always()
         shell: bash
         run: |
-          echo "Cleaning up workspace: ${WORK_DIR}"
+          echo "Cleaning up custom workspace: ${WORK_DIR}"
           rm -rf "${WORK_DIR}"
+          echo "Cleaning up default workspace: ${GITHUB_WORKSPACE}"
+          rm -rf "${GITHUB_WORKSPACE}"
