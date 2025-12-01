@@ -26,7 +26,7 @@ permissions: read-all
 
 jobs:
   build-rhel9-images:
-    runs-on: git-runner-qa
+    runs-on: test-runner-git
     timeout-minutes: 240
     strategy:
       fail-fast: false
