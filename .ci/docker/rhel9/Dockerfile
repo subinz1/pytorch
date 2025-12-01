@@ -1,11 +1,28 @@
 # RHEL 9.6 Docker image for PyTorch CI
 ARG CUDA_VERSION=12.6
 ARG BASE_TARGET=cuda${CUDA_VERSION}
+# This flag has to be set to true if there is an active subscription
+ARG ENABLE_SUBSCRIPTION=false
+
 FROM docker.io/redhat/ubi9:9.6 as base
+
+# Pass build args to the base stage
+ARG ENABLE_SUBSCRIPTION
 
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
+
+# Register the system with the entitlement server if subscription is enabled
+# Expects /run/secrets/rhsm-org and /run/secrets/rhsm-activationkey to be mounted
+RUN --mount=type=secret,id=rhsm-org \
+    --mount=type=secret,id=rhsm-activationkey \
+    if [ "${ENABLE_SUBSCRIPTION}" = "true" ] && [ -f /run/secrets/rhsm-org ] && [ -f /run/secrets/rhsm-activationkey ]; then \
+        echo "Registering the system with entitlement server" && \
+        subscription-manager register \
+            --activationkey=$(cat /run/secrets/rhsm-activationkey) \
+            --org=$(cat /run/secrets/rhsm-org); \
+    fi
 
 # Install EPEL and development tools
 RUN dnf -y update && \

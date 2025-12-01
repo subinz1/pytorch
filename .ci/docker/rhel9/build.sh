@@ -46,11 +46,25 @@ export DOCKER_BUILDKIT=1
 TOPDIR=$(git rev-parse --show-toplevel)
 tmp_tag=$(basename "$(mktemp -u)" | tr '[:upper:]' '[:lower:]')
 
+# Check for RHEL subscription credentials
+SUBSCRIPTION_ARGS=""
+RHSM_ORG_FILE="${RHSM_ORG_FILE:-/etc/rhsm/rhsm-org}"
+RHSM_KEY_FILE="${RHSM_KEY_FILE:-/etc/rhsm/rhsm-activationkey}"
+
+if [ -f "${RHSM_ORG_FILE}" ] && [ -f "${RHSM_KEY_FILE}" ]; then
+    echo "RHEL subscription credentials found, enabling subscription"
+    SUBSCRIPTION_ARGS="--secret id=rhsm-org,src=${RHSM_ORG_FILE} --secret id=rhsm-activationkey,src=${RHSM_KEY_FILE} --build-arg ENABLE_SUBSCRIPTION=true"
+else
+    echo "No RHEL subscription credentials found, using UBI repos only"
+    SUBSCRIPTION_ARGS="--build-arg ENABLE_SUBSCRIPTION=false"
+fi
+
 docker build \
   --target final \
   --progress plain \
   --build-arg "BASE_TARGET=${BASE_TARGET}" \
   ${EXTRA_BUILD_ARGS} \
+  ${SUBSCRIPTION_ARGS} \
   -t ${tmp_tag} \
   $@ \
   -f "${TOPDIR}/.ci/docker/rhel9/Dockerfile" \
