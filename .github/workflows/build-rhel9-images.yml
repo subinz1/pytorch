@@ -62,6 +62,8 @@ jobs:
           # Tag it with the expected names
           docker tag "$NEW_IMAGE" rhel9-builder:${{ matrix.tag }}
           docker tag "$NEW_IMAGE" ci-image:pytorch-rhel-9.6-py3.12-gcc11-${{ matrix.tag }}
+          # Also tag without CUDA version suffix for nightly workflow compatibility
+          docker tag "$NEW_IMAGE" ci-image:pytorch-rhel-9.6-py3.12-gcc11
 
       - name: Verify CUDA installation
         if: matrix.tag != 'cpu'
