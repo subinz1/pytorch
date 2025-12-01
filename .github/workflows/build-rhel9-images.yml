@@ -48,15 +48,20 @@ jobs:
           rsync -a "${GITHUB_WORKSPACE}/" "${WORK_DIR}/"
           cd "${WORK_DIR}"
 
-      - name: Build RHEL 9 Docker image
+      - name: Build and tag RHEL 9 Docker image
         shell: bash
         run: |
           cd "${WORK_DIR}/.ci/docker/rhel9"
+          # Build script creates image with temp tag, we need to find it and tag properly
+          BEFORE_IMAGES=$(docker images --format '{{.Repository}}:{{.Tag}}' | sort)
           ./build.sh rhel9-builder:${{ matrix.tag }}
-
-      - name: Tag image
-        run: |
-          docker tag rhel9-builder:${{ matrix.tag }} ci-image:pytorch-rhel-9.6-py3.12-gcc11-${{ matrix.tag }}
+          AFTER_IMAGES=$(docker images --format '{{.Repository}}:{{.Tag}}' | sort)
+          # Find the newly created image (the temp tag)
+          NEW_IMAGE=$(comm -13 <(echo "$BEFORE_IMAGES") <(echo "$AFTER_IMAGES") | grep -v '<none>' | head -1)
+          echo "New image created: $NEW_IMAGE"
+          # Tag it with the expected names
+          docker tag "$NEW_IMAGE" rhel9-builder:${{ matrix.tag }}
+          docker tag "$NEW_IMAGE" ci-image:pytorch-rhel-9.6-py3.12-gcc11-${{ matrix.tag }}
 
       - name: Verify CUDA installation
         if: matrix.tag != 'cpu'
