@@ -1,0 +1,71 @@
+name: build-rhel9-images
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - release/*
+    paths:
+      - .ci/docker/rhel9/**
+      - .github/workflows/build-rhel9-images.yml
+    tags:
+      # Release candidate tags
+      - v[0-9]+.[0-9]+.0+-rc[0-9]+
+  pull_request:
+    paths:
+      - .ci/docker/rhel9/**
+      - .github/workflows/build-rhel9-images.yml
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}-${{ github.event_name == 'workflow_dispatch' }}
+  cancel-in-progress: true
+
+permissions: read-all
+
+jobs:
+  build-rhel9-images:
+    runs-on: git-runner-qa
+    timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        tag: ["cuda12.6", "cuda12.8", "cuda12.9", "cuda13.0", "cpu"]
+    steps:
+      - name: Clean workspace
+        shell: bash
+        run: |
+          echo "${GITHUB_WORKSPACE}"
+          sudo rm -rf "${GITHUB_WORKSPACE}"
+          mkdir "${GITHUB_WORKSPACE}"
+
+      - name: Checkout PyTorch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Linux
+        uses: ./.github/actions/setup-linux
+
+      - name: Build RHEL 9 Docker image
+        run: |
+          cd .ci/docker/rhel9
+          ./build.sh rhel9-builder:${{ matrix.tag }}
+
+      - name: Tag image
+        run: |
+          docker tag rhel9-builder:${{ matrix.tag }} ci-image:pytorch-rhel-9.6-py3.12-gcc11-${{ matrix.tag }}
+
+      - name: Verify CUDA installation
+        if: matrix.tag != 'cpu'
+        run: |
+          CUDA_VERSION=$(echo "${{ matrix.tag }}" | sed 's/cuda//')
+          docker run --rm ci-image:pytorch-rhel-9.6-py3.12-gcc11-${{ matrix.tag }} nvcc --version | grep "release ${CUDA_VERSION}"
+
+      - name: Verify Python version
+        run: |
+          docker run --rm ci-image:pytorch-rhel-9.6-py3.12-gcc11-${{ matrix.tag }} python --version | grep "Python 3.12"
+
+      - name: Test basic build tools
+        run: |
+          docker run --rm ci-image:pytorch-rhel-9.6-py3.12-gcc11-${{ matrix.tag }} bash -c "gcc --version && g++ --version && cmake --version"
