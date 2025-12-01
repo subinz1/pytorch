@@ -128,6 +128,10 @@ COPY --from=cuda13.0  /usr/local/cuda-13.0 /usr/local/cuda-13.0
 
 # Final step
 FROM ${BASE_TARGET} as final
+
+# Re-declare CUDA_VERSION ARG to inherit from build-time argument
+ARG CUDA_VERSION
+
 COPY --from=openssl            /opt/openssl           /opt/openssl
 COPY --from=patchelf           /patchelf              /usr/local/bin/patchelf
 COPY --from=conda              /opt/conda             /opt/conda
@@ -138,7 +142,6 @@ COPY ./java/jni.h jni.h
 RUN bash ./install_jni.sh && rm install_jni.sh
 
 # Set PATH with CUDA before conda to ensure nvcc is found
-ARG CUDA_VERSION=12.6
 ENV PATH /usr/local/cuda-${CUDA_VERSION}/bin:/opt/conda/bin:$PATH
 ENV CUDA_HOME /usr/local/cuda-${CUDA_VERSION}
 ENV LD_LIBRARY_PATH /usr/local/cuda-${CUDA_VERSION}/lib64:$LD_LIBRARY_PATH
