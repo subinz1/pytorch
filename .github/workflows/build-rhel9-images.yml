@@ -49,9 +49,19 @@ jobs:
           driver = "overlay"
           runroot = "$HOME/.local/share/containers/storage"
           graphroot = "$HOME/.local/share/containers/storage"
+
+          [storage.options]
+          additionalimagestores = []
+          pull_options = {enable_partial_images = "false", use_hard_links = "false", ostree_repos=""}
+
+          [storage.options.overlay]
+          mountopt = "nodev,metacopy=on"
           EOF
-          # Create storage directory
+          # Create storage and temp directories
           mkdir -p ~/.local/share/containers/storage
+          mkdir -p ~/tmp
+          # Set TMPDIR to use home directory
+          echo "TMPDIR=$HOME/tmp" >> $GITHUB_ENV
 
       - name: Build and tag RHEL 9 Docker image
         shell: bash
