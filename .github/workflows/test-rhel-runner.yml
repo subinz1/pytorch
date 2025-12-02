@@ -6,7 +6,7 @@ on:
 jobs:
   test-runner:
     name: Test RHEL Runner
-    runs-on: test-runner-git
+    runs-on: test-runner-git-109
     steps:
       - name: Check runner
         run: |

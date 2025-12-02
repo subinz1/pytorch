@@ -68,14 +68,14 @@ jobs:
     uses: ./.github/workflows/_linux-build.yml
     with:
       runner_prefix: ""
-      runner: "test-runner-git"
+      runner: "test-runner-git-109"
       build-environment: linux-rhel-9.6-py3.12-gcc11
       docker-image-name: ci-image:pytorch-rhel-9.6-py3.12-gcc11
       test-matrix: |
         { include: [
-          { config: "default", shard: 1, num_shards: 3, runner: "test-runner-git" },
-          { config: "default", shard: 2, num_shards: 3, runner: "test-runner-git" },
-          { config: "default", shard: 3, num_shards: 3, runner: "test-runner-git" },
+          { config: "default", shard: 1, num_shards: 3, runner: "test-runner-git-109" },
+          { config: "default", shard: 2, num_shards: 3, runner: "test-runner-git-109" },
+          { config: "default", shard: 3, num_shards: 3, runner: "test-runner-git-109" },
         ]}
     secrets: inherit
 
