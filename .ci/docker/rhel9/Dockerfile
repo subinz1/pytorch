@@ -1,5 +1,5 @@
 # RHEL 9.6 Docker image for PyTorch CI
-ARG CUDA_VERSION=12.6
+ARG CUDA_VERSION=12.8
 ARG BASE_TARGET=cuda${CUDA_VERSION}
 # This flag has to be set to true if there is an active subscription
 ARG ENABLE_SUBSCRIPTION=false
@@ -87,7 +87,7 @@ RUN bash ./install_conda.sh && rm install_conda.sh
 
 # Install CUDA
 FROM base as cuda
-ARG CUDA_VERSION=12.6
+ARG CUDA_VERSION=12.8
 RUN rm -rf /usr/local/cuda-*
 ADD ./common/install_cuda.sh install_cuda.sh
 COPY ./common/install_nccl.sh install_nccl.sh
@@ -99,32 +99,18 @@ ENV CUDA_VERSION=${CUDA_VERSION}
 # Make things in our path by default
 ENV PATH=/usr/local/cuda-${CUDA_VERSION}/bin:$PATH
 
-FROM cuda as cuda12.6
-RUN bash ./install_cuda.sh 12.6
-ENV DESIRED_CUDA=12.6
-
 FROM cuda as cuda12.8
 RUN bash ./install_cuda.sh 12.8
 ENV DESIRED_CUDA=12.8
-
-FROM cuda as cuda12.9
-RUN bash ./install_cuda.sh 12.9
-ENV DESIRED_CUDA=12.9
-
-FROM cuda as cuda13.0
-RUN bash ./install_cuda.sh 13.0
-ENV DESIRED_CUDA=13.0
+ENV CUDA_VERSION=12.8
+ENV CUDA_HOME=/usr/local/cuda-12.8
+ENV PATH=/usr/local/cuda-12.8/bin:$PATH
+ENV LD_LIBRARY_PATH=/usr/local/cuda-12.8/lib64:$LD_LIBRARY_PATH
 
 # Install MNIST test data
 FROM base as mnist
 ADD ./common/install_mnist.sh install_mnist.sh
 RUN bash ./install_mnist.sh
-
-FROM base as all_cuda
-COPY --from=cuda12.6  /usr/local/cuda-12.6 /usr/local/cuda-12.6
-COPY --from=cuda12.8  /usr/local/cuda-12.8 /usr/local/cuda-12.8
-COPY --from=cuda12.9  /usr/local/cuda-12.9 /usr/local/cuda-12.9
-COPY --from=cuda13.0  /usr/local/cuda-13.0 /usr/local/cuda-13.0
 
 # Final step
 FROM ${BASE_TARGET} as final
