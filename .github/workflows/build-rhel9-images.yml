@@ -69,7 +69,10 @@ jobs:
           cd .ci/docker/rhel9
           # Build script creates image with temp tag, we need to find it and tag properly
           BEFORE_IMAGES=$(docker images --format '{{.Repository}}:{{.Tag}}' | sort)
-          ./build.sh rhel9-builder:${{ matrix.tag }}
+          # Pass branch and commit hash as build args
+          ./build.sh rhel9-builder:${{ matrix.tag }} \
+            --build-arg PYT_BRANCH=${{ github.ref_name }} \
+            --build-arg COMMIT_HASH=${{ github.sha }}
           AFTER_IMAGES=$(docker images --format '{{.Repository}}:{{.Tag}}' | sort)
           # Find the newly created image (the temp tag)
           NEW_IMAGE=$(comm -13 <(echo "$BEFORE_IMAGES") <(echo "$AFTER_IMAGES") | grep -v '<none>' | head -1)
@@ -94,3 +97,7 @@ jobs:
       - name: Test basic build tools
         run: |
           docker run --rm ci-image:pytorch-rhel-9.6-py3.12-gcc11-${{ matrix.tag }} bash -c "gcc --version && g++ --version && cmake --version"
+
+      - name: Verify PyTorch build
+        run: |
+          docker run --rm ci-image:pytorch-rhel-9.6-py3.12-gcc11-${{ matrix.tag }} bash -c "cd /pytorch && python -c 'import torch; print(f\"PyTorch version: {torch.__version__}\"); print(f\"CUDA available: {torch.cuda.is_available()}\")'"
