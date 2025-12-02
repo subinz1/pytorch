@@ -166,7 +166,8 @@ ENV LDFLAGS="-fuse-ld=lld"
 
 # Install PyTorch dependencies and build
 RUN pip install -r .ci/docker/requirements-ci.txt && \
-    pip install --group dev && \
+    pip install -r requirements-build.txt && \
+    pip install -r requirements.txt && \
     pip install mkl-static mkl-include && \
     .ci/docker/common/install_magma_conda.sh 12.8 && \
     make triton && \
