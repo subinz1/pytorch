@@ -38,20 +38,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Move to custom working directory
-        shell: bash
-        run: |
-          WORK_DIR="/mnt/podman_storage/gitlab-runner/${GITHUB_RUN_ID}"
-          echo "WORK_DIR=${WORK_DIR}" >> $GITHUB_ENV
-          mkdir -p "${WORK_DIR}"
-          echo "Moving workspace to ${WORK_DIR}"
-          rsync -a "${GITHUB_WORKSPACE}/" "${WORK_DIR}/"
-          cd "${WORK_DIR}"
-
       - name: Build and tag RHEL 9 Docker image
         shell: bash
         run: |
-          cd "${WORK_DIR}/.ci/docker/rhel9"
+          cd .ci/docker/rhel9
           # Build script creates image with temp tag, we need to find it and tag properly
           BEFORE_IMAGES=$(docker images --format '{{.Repository}}:{{.Tag}}' | sort)
           ./build.sh rhel9-builder:${{ matrix.tag }}
@@ -79,11 +69,3 @@ jobs:
       - name: Test basic build tools
         run: |
           docker run --rm ci-image:pytorch-rhel-9.6-py3.12-gcc11-${{ matrix.tag }} bash -c "gcc --version && g++ --version && cmake --version"
-
-      - name: Cleanup custom workspace
-        if: always()
-        shell: bash
-        run: |
-          echo "Cleaning up custom workspace: ${WORK_DIR}"
-          rm -rf "${WORK_DIR}"
-          echo "Cleanup complete"
