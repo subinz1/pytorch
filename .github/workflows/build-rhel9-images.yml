@@ -38,6 +38,21 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Configure podman to use home directory
+        shell: bash
+        run: |
+          # Create podman config directory
+          mkdir -p ~/.config/containers
+          # Configure podman to use home directory for storage (not /mnt/podman_storage)
+          cat > ~/.config/containers/storage.conf << 'EOF'
+          [storage]
+          driver = "overlay"
+          runroot = "$HOME/.local/share/containers/storage"
+          graphroot = "$HOME/.local/share/containers/storage"
+          EOF
+          # Create storage directory
+          mkdir -p ~/.local/share/containers/storage
+
       - name: Build and tag RHEL 9 Docker image
         shell: bash
         run: |
