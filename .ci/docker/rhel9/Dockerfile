@@ -3,9 +3,6 @@ ARG CUDA_VERSION=12.8
 ARG BASE_TARGET=cuda${CUDA_VERSION}
 # This flag has to be set to true if there is an active subscription
 ARG ENABLE_SUBSCRIPTION=false
-# PyTorch build args
-ARG PYT_BRANCH=main
-ARG COMMIT_HASH=""
 
 FROM docker.io/redhat/ubi9:9.6 as base
 
@@ -154,18 +151,9 @@ RUN touch /.condarc && \
 # Set OpenBLAS paths
 ENV OpenBLAS_HOME=/usr/lib64:${OpenBLAS_HOME}
 
-# Re-declare build args for PyTorch build stage
-ARG PYT_BRANCH
-ARG COMMIT_HASH
-
-# Clone PyTorch and checkout specific commit/branch if required
-RUN git clone https://github.com/pytorch/pytorch /pytorch && \
+# Clone PyTorch main branch from upstream
+RUN git clone --branch main --depth 1 https://github.com/pytorch/pytorch /pytorch && \
     cd /pytorch && \
-    git checkout ${PYT_BRANCH} && \
-    if [ -n "${COMMIT_HASH}" ]; then \
-        echo "Checking out specific commit: ${COMMIT_HASH}" && \
-        git checkout ${COMMIT_HASH}; \
-    fi && \
     git submodule sync && \
     git submodule update --init --recursive
 

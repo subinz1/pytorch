@@ -69,10 +69,7 @@ jobs:
           cd .ci/docker/rhel9
           # Build script creates image with temp tag, we need to find it and tag properly
           BEFORE_IMAGES=$(docker images --format '{{.Repository}}:{{.Tag}}' | sort)
-          # Pass branch and commit hash as build args
-          ./build.sh rhel9-builder:${{ matrix.tag }} \
-            --build-arg PYT_BRANCH=${{ github.ref_name }} \
-            --build-arg COMMIT_HASH=${{ github.sha }}
+          ./build.sh rhel9-builder:${{ matrix.tag }}
           AFTER_IMAGES=$(docker images --format '{{.Repository}}:{{.Tag}}' | sort)
           # Find the newly created image (the temp tag)
           NEW_IMAGE=$(comm -13 <(echo "$BEFORE_IMAGES") <(echo "$AFTER_IMAGES") | grep -v '<none>' | head -1)
