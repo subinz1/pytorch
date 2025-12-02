@@ -41,7 +41,7 @@ jobs:
       - name: Move to custom working directory
         shell: bash
         run: |
-          WORK_DIR="/mnt/builds_2/users/gitlab-runner/${GITHUB_RUN_ID}"
+          WORK_DIR="/mnt/podman_storage/gitlab-runner/${GITHUB_RUN_ID}"
           echo "WORK_DIR=${WORK_DIR}" >> $GITHUB_ENV
           mkdir -p "${WORK_DIR}"
           echo "Moving workspace to ${WORK_DIR}"
