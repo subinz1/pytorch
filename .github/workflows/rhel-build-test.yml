@@ -1,0 +1,45 @@
+name: RHEL 9.6 Build and Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - runner_test
+    paths:
+      - .ci/docker/rhel9/**
+      - .github/workflows/rhel-build-test.yml
+      - .github/workflows/_linux-build.yml
+      - .github/workflows/_linux-test.yml
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}-${{ github.event_name == 'workflow_dispatch' }}
+  cancel-in-progress: true
+
+permissions: read-all
+
+jobs:
+  rhel-9_6-py3_12-gcc11-build:
+    name: rhel-9.6-py3.12-gcc11
+    uses: ./.github/workflows/_linux-build.yml
+    with:
+      runner_prefix: ""
+      runner: "test-runner-git-109"
+      build-environment: linux-rhel-9.6-py3.12-gcc11
+      docker-image-name: ci-image:pytorch-rhel-9.6-py3.12-gcc11
+      test-matrix: |
+        { include: [
+          { config: "default", shard: 1, num_shards: 3, runner: "test-runner-git-109" },
+          { config: "default", shard: 2, num_shards: 3, runner: "test-runner-git-109" },
+          { config: "default", shard: 3, num_shards: 3, runner: "test-runner-git-109" },
+        ]}
+    secrets: inherit
+
+  rhel-9_6-py3_12-gcc11-test:
+    name: rhel-9.6-py3.12-gcc11
+    uses: ./.github/workflows/_linux-test.yml
+    needs: rhel-9_6-py3_12-gcc11-build
+    with:
+      build-environment: linux-rhel-9.6-py3.12-gcc11
+      docker-image: ${{ needs.rhel-9_6-py3_12-gcc11-build.outputs.docker-image }}
+      test-matrix: ${{ needs.rhel-9_6-py3_12-gcc11-build.outputs.test-matrix }}
+    secrets: inherit
