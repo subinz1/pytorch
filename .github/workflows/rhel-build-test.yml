@@ -20,7 +20,13 @@ permissions:
   contents: read
 
 jobs:
+  build-docker-image:
+    name: Build RHEL 9.6 Docker Image
+    uses: ./.github/workflows/build-rhel9-images.yml
+    secrets: inherit
+
   rhel-9_6-py3_12-gcc11-build:
+    needs: build-docker-image
     name: rhel-9.6-py3.12-gcc11
     uses: ./.github/workflows/_linux-build.yml
     with:
