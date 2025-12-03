@@ -23,7 +23,7 @@ permissions: read-all
 
 jobs:
   build-rhel9-images:
-    runs-on: test-runner-git-109
+    runs-on: test-runner-git-109-vpc
     timeout-minutes: 240
     strategy:
       fail-fast: false
