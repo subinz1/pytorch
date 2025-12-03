@@ -151,25 +151,6 @@ RUN touch /.condarc && \
 # Set OpenBLAS paths
 ENV OpenBLAS_HOME=/usr/lib64:${OpenBLAS_HOME}
 
-# Clone PyTorch main branch from upstream
-RUN git clone --branch main --depth 1 https://github.com/pytorch/pytorch /pytorch && \
-    cd /pytorch && \
-    git submodule sync && \
-    git submodule update --init --recursive
-
-# Set working directory
-WORKDIR /pytorch
-
-# Set linker to lld
+# Set linker to lld for improved build performance
 ENV CMAKE_LINKER="lld"
 ENV LDFLAGS="-fuse-ld=lld"
-
-# Install PyTorch dependencies and build
-RUN pip install -r .ci/docker/requirements-ci.txt && \
-    pip install -r requirements-build.txt && \
-    pip install -r requirements.txt && \
-    pip install mkl-static mkl-include && \
-    .ci/docker/common/install_magma_conda.sh 12.8 && \
-    make triton && \
-    export CMAKE_PREFIX_PATH="${CONDA_PREFIX:-$(dirname $(which conda))/../}:${CMAKE_PREFIX_PATH}" && \
-    .ci/pytorch/build.sh
