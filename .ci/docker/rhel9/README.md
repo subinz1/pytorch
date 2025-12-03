@@ -10,6 +10,12 @@ cd .ci/docker/rhel9
 ./build.sh rhel9-builder:cuda12.8
 ```
 
+The build process will:
+1. Pull RHEL 9.6 base image
+2. Install Python 3.12, GCC 11, and build tools
+3. Install CUDA 12.8 toolkit
+4. Set up conda environment
+
 ## RHEL Subscription (Optional)
 
 The build supports optional RHEL subscription registration for accessing additional repositories beyond UBI repos.
