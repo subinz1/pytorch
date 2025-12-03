@@ -125,8 +125,8 @@ on:
 jobs:
   build:
     environment: ${{ github.ref == 'refs/heads/main' && 'scribe-protected' || startsWith(github.ref, 'refs/heads/release/') && 'scribe-protected' || contains(github.event.pull_request.labels.*.name, 'ci-scribe') && 'scribe-pr' || '' }}
-    # Don't run on forked repos
-    if: github.repository_owner == 'pytorch'
+    # Don't run on forked repos (except subinz1 for RHEL testing)
+    if: github.repository_owner == 'pytorch' || github.repository_owner == 'subinz1'
     runs-on: ${{ inputs.runner_prefix}}${{ inputs.runner }}
     timeout-minutes: 480
     outputs:
