@@ -32,7 +32,6 @@ RUN dnf -y update && \
 # Install build tools and dependencies
 # Use --allowerasing to resolve curl/curl-minimal conflict
 RUN dnf install -y --allowerasing \
-    sudo \
     wget \
     curl \
     perl \
