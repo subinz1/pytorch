@@ -8,6 +8,7 @@ on:
     paths:
       - .ci/docker/rhel9/**
       - .github/workflows/rhel-build-test.yml
+      - .github/workflows/build-rhel9-images.yml
       - .github/workflows/_linux-build.yml
       - .github/workflows/_linux-test.yml
 
