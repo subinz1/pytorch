@@ -19,10 +19,6 @@ on:
       - .ci/docker/rhel9/**
       - .github/workflows/build-rhel9-images.yml
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}-${{ github.event_name == 'workflow_dispatch' }}
-  cancel-in-progress: true
-
 permissions: read-all
 
 jobs:
