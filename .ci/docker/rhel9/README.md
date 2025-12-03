@@ -2,6 +2,14 @@
 
 This directory contains the Dockerfile and build scripts for creating RHEL 9.6-based Docker images for PyTorch CI.
 
+## Quick Start
+
+To build the RHEL 9.6 Docker image with CUDA 12.8, run:
+```bash
+cd .ci/docker/rhel9
+./build.sh rhel9-builder:cuda12.8
+```
+
 ## RHEL Subscription (Optional)
 
 The build supports optional RHEL subscription registration for accessing additional repositories beyond UBI repos.
