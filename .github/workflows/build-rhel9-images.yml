@@ -35,17 +35,24 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Configure podman to use home directory
+      - name: Clean up stale podman containers and configure storage
         shell: bash
         run: |
+          # Reset podman storage to clean state
+          podman system reset -f || true
+
           # Create podman config directory
           mkdir -p ~/.config/containers
-          # Configure podman to use home directory for storage (not /mnt/podman_storage)
-          cat > ~/.config/containers/storage.conf << 'EOF'
+
+          # Get actual home directory path
+          ACTUAL_HOME=$(eval echo ~)
+
+          # Configure podman to use home directory for storage
+          cat > ~/.config/containers/storage.conf << EOF
           [storage]
           driver = "overlay"
-          runroot = "$HOME/.local/share/containers/storage"
-          graphroot = "$HOME/.local/share/containers/storage"
+          runroot = "${ACTUAL_HOME}/.local/share/containers/storage"
+          graphroot = "${ACTUAL_HOME}/.local/share/containers/storage"
 
           [storage.options]
           additionalimagestores = []

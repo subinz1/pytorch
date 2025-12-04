@@ -11,6 +11,8 @@ wget -q $MINICONDA_URL
 bash $(basename "$MINICONDA_URL") -b -p /opt/conda
 rm $(basename "$MINICONDA_URL")
 export PATH=/opt/conda/bin:$PATH
+# Fix missing tqdm module issue
+/opt/conda/bin/pip3 install --no-input tqdm
 # See https://github.com/pytorch/builder/issues/1473
 # Pin conda to 23.5.2 as it's the last one compatible with openssl-1.1.1
 conda install -y conda=23.5.2 conda-build anaconda-client git ninja
