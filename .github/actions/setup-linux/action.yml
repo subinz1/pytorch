@@ -39,11 +39,19 @@ runs:
       id: check_container_runner
       run: echo "IN_CONTAINER_RUNNER=$(if [ -f /.inarc ] || [ -f /.incontainer ]; then echo true ; else echo false; fi)" >> "$GITHUB_OUTPUT"
 
-    - name: Start docker if docker daemon is not running
+    - name: Start docker/podman service if not running
       shell: bash
       if: ${{ steps.check_container_runner.outputs.IN_CONTAINER_RUNNER == 'false' }}
       run: |
-        if systemctl is-active --quiet docker; then
+        # Check if podman service exists (RHEL/Fedora systems)
+        if systemctl list-unit-files | grep -q podman.service; then
+            if systemctl is-active --quiet podman; then
+                echo "Podman service is running...";
+            else
+                echo "Starting podman service..." && systemctl --user start podman;
+            fi
+        # Otherwise check for docker service
+        elif systemctl is-active --quiet docker; then
             echo "Docker daemon is running...";
         else
             echo "Starting docker daemon..." && systemctl start docker;
