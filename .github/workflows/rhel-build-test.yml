@@ -1,5 +1,5 @@
 name: RHEL 9.6 Build and Test
-# Trigger with test-runner-git-109-vpc
+# Testing with test-runner-git-109-vpc runner
 
 on:
   workflow_dispatch:

@@ -1,7 +1,10 @@
 name: test-rhel-runner
-
+# Test trigger with test-runner-git-109-vpc
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - runner_test
 
 jobs:
   test-runner:
