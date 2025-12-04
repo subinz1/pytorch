@@ -88,7 +88,7 @@ jobs:
         if: matrix.tag != 'cpu'
         run: |
           CUDA_VERSION=$(echo "${{ matrix.tag }}" | sed 's/cuda//')
-          docker run --rm ci-image:pytorch-rhel-9.6-py3.12-gcc11-${{ matrix.tag }} nvcc --version | grep "release ${CUDA_VERSION}"
+          docker run --rm ci-image:pytorch-rhel-9.6-py3.12-gcc11-${{ matrix.tag }} bash -c "source /etc/profile && /usr/local/cuda-${CUDA_VERSION}/bin/nvcc --version" | grep "release ${CUDA_VERSION}"
 
       - name: Verify Python version
         run: |
