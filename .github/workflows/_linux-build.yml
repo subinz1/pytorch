@@ -133,7 +133,7 @@ jobs:
     runs-on: ${{ inputs.runner_prefix}}${{ inputs.runner }}
     timeout-minutes: 480
     outputs:
-      docker-image: ${{ steps.calculate-docker-image.outputs.docker-image }}
+      docker-image: ${{ steps.calculate-docker-image.outputs.docker-image || steps.set-rhel-image.outputs.docker-image }}
       test-matrix: ${{ steps.filter.outputs.test-matrix }}
       build-environment: ${{ inputs.build-environment }}
     steps:
@@ -188,9 +188,16 @@ jobs:
       - name: Calculate docker image
         id: calculate-docker-image
         uses: pytorch/test-infra/.github/actions/calculate-docker-image@main
-        if: inputs.build-environment != 'linux-s390x-binary-manywheel'
+        if: inputs.build-environment != 'linux-s390x-binary-manywheel' && inputs.build-environment != 'linux-rhel-9.6-py3.12-gcc11'
         with:
           docker-image-name: ${{ inputs.docker-image-name }}
+
+      - name: Set RHEL docker image (skip ECR check)
+        id: set-rhel-image
+        if: inputs.build-environment == 'linux-rhel-9.6-py3.12-gcc11'
+        shell: bash
+        run: |
+          echo "docker-image=${{ inputs.docker-image-name }}" >> "$GITHUB_OUTPUT"
 
       - name: Use following to pull public copy of the image
         id: print-ghcr-mirror
@@ -266,7 +273,7 @@ jobs:
           XLA_CLANG_CACHE_S3_BUCKET_NAME: ossci-compiler-clang-cache-circleci-xla
           PR_LABELS: ${{ toJson(github.event.pull_request.labels.*.name) }}
           TORCH_CUDA_ARCH_LIST: ${{ inputs.cuda-arch-list }}
-          DOCKER_IMAGE: ${{ steps.calculate-docker-image.outputs.docker-image }}
+          DOCKER_IMAGE: ${{ steps.calculate-docker-image.outputs.docker-image || steps.set-rhel-image.outputs.docker-image }}
           DOCKER_IMAGE_S390X: ${{ inputs.docker-image-name }}
           XLA_CUDA: ${{ contains(inputs.build-environment, 'xla') && '0' || '' }}
           OUR_GITHUB_JOB_ID: ${{ steps.get-job-id.outputs.job-id }}
@@ -375,7 +382,7 @@ jobs:
         uses: ./.github/actions/build-external-packages
         with:
           build-targets: ${{ inputs.build-external-packages }}
-          docker-image: ${{ steps.calculate-docker-image.outputs.docker-image }}
+          docker-image: ${{ steps.calculate-docker-image.outputs.docker-image || steps.set-rhel-image.outputs.docker-image }}
           cuda-arch-list: ${{ inputs.cuda-arch-list }}
           output-dir: external
 
