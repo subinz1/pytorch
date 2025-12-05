@@ -58,6 +58,8 @@ runs:
         fi
 
     - name: Log in to ECR
+      # Skip ECR login for self-hosted runners that don't use AWS
+      if: ${{ !contains(runner.name, 'git-runner') }}
       uses: nick-fields/retry@v3.0.0
       env:
         AWS_RETRY_MODE: standard
