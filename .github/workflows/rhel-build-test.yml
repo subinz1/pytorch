@@ -1,5 +1,5 @@
 name: RHEL 9.6 Build and Test
-# Testing with test-runner-git-109-vpc runner
+# Full pipeline test with all fixes applied
 
 on:
   workflow_dispatch:
