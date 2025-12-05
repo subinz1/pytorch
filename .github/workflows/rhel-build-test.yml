@@ -12,6 +12,7 @@ on:
       - .github/workflows/build-rhel9-images.yml
       - .github/workflows/_linux-build.yml
       - .github/workflows/_linux-test.yml
+      - .github/actions/setup-linux/**
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.sha }}-${{ github.event_name == 'workflow_dispatch' }}
