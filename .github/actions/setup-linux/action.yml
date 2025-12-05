@@ -53,14 +53,14 @@ runs:
 
             # Configure podman to allow short names without prompting
             mkdir -p ~/.config/containers
-            cat > ~/.config/containers/registries.conf <<'PODMAN_CONFIG'
-[registries.search]
-registries = ['docker.io', 'localhost']
-
-[[registry]]
-location = "localhost"
-insecure = true
-PODMAN_CONFIG
+            {
+              echo "[registries.search]"
+              echo "registries = ['docker.io', 'localhost']"
+              echo ""
+              echo "[[registry]]"
+              echo "location = \"localhost\""
+              echo "insecure = true"
+            } > ~/.config/containers/registries.conf
             echo "Podman configured to allow short names from localhost and docker.io"
         # Otherwise check for docker service
         elif systemctl is-active --quiet docker; then
