@@ -50,6 +50,18 @@ runs:
             else
                 echo "Starting podman service..." && systemctl --user start podman;
             fi
+
+            # Configure podman to allow short names without prompting
+            mkdir -p ~/.config/containers
+            cat > ~/.config/containers/registries.conf << 'EOF'
+[registries.search]
+registries = ['docker.io', 'localhost']
+
+[[registry]]
+location = "localhost"
+insecure = true
+EOF
+            echo "Podman configured to allow short names from localhost and docker.io"
         # Otherwise check for docker service
         elif systemctl is-active --quiet docker; then
             echo "Docker daemon is running...";
