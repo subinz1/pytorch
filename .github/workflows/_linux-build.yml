@@ -412,7 +412,7 @@ jobs:
 
       - name: Store PyTorch Build Artifacts on S3
         uses: seemethere/upload-artifact-s3@baba72d0712b404f646cebe0730933554ebce96a # v5.1.0
-        if: inputs.build-generates-artifacts && (steps.build.outcome != 'skipped' || steps.use-old-whl.outputs.reuse == 'true') && inputs.build-environment != 'linux-s390x-binary-manywheel'
+        if: inputs.build-generates-artifacts && (steps.build.outcome != 'skipped' || steps.use-old-whl.outputs.reuse == 'true') && inputs.build-environment != 'linux-s390x-binary-manywheel' && inputs.build-environment != 'linux-rhel-9.6-py3.12-gcc11'
         with:
           name: ${{ inputs.build-environment }}
           retention-days: 14
@@ -431,7 +431,7 @@ jobs:
 
       - name: copy logs
         shell: bash
-        if: ${{ always() && steps.build.outcome != 'skipped' && !inputs.disable-monitor && inputs.build-environment != 'linux-s390x-binary-manywheel'}}
+        if: ${{ always() && steps.build.outcome != 'skipped' && !inputs.disable-monitor && inputs.build-environment != 'linux-s390x-binary-manywheel' && inputs.build-environment != 'linux-rhel-9.6-py3.12-gcc11'}}
         continue-on-error: true
         run: |
           rm -f ./usage_logs
@@ -439,7 +439,7 @@ jobs:
           cp ../../usage_logs/usage_log_build_*.txt ./usage_logs/
 
       - name: Upload raw usage log to s3
-        if: ${{ always() && steps.build.outcome != 'skipped' && !inputs.disable-monitor && inputs.build-environment != 'linux-s390x-binary-manywheel'}}
+        if: ${{ always() && steps.build.outcome != 'skipped' && !inputs.disable-monitor && inputs.build-environment != 'linux-s390x-binary-manywheel' && inputs.build-environment != 'linux-rhel-9.6-py3.12-gcc11'}}
         uses: seemethere/upload-artifact-s3@v5
         with:
           s3-prefix: |
@@ -449,14 +449,14 @@ jobs:
           path: usage_logs/usage_log_build_*.txt
 
       - name: Upload sccache stats
-        if: steps.build.outcome != 'skipped' && inputs.build-environment != 'linux-s390x-binary-manywheel'
+        if: steps.build.outcome != 'skipped' && inputs.build-environment != 'linux-s390x-binary-manywheel' && inputs.build-environment != 'linux-rhel-9.6-py3.12-gcc11'
         uses: ./.github/actions/upload-sccache-stats
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           build-time: ${{ steps.build.outputs.build_time }}
 
       - name: Upload utilization stats
-        if: ${{ always() && steps.build.outcome != 'skipped' && !inputs.disable-monitor && inputs.build-environment != 'linux-s390x-binary-manywheel' }}
+        if: ${{ always() && steps.build.outcome != 'skipped' && !inputs.disable-monitor && inputs.build-environment != 'linux-s390x-binary-manywheel' && inputs.build-environment != 'linux-rhel-9.6-py3.12-gcc11' }}
         continue-on-error: true
         uses: ./.github/actions/upload-utilization-stats
         with:
