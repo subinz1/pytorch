@@ -51,17 +51,14 @@ runs:
                 echo "Starting podman service..." && systemctl --user start podman;
             fi
 
-            # Configure podman to allow short names without prompting
+            # Configure podman short-name mode to permissive (don't prompt for short names)
+            # This allows podman to use local images without trying to pull from registries
             mkdir -p ~/.config/containers
             rm -f ~/.config/containers/registries.conf
             {
-              echo "unqualified-search-registries = ['docker.io', 'localhost']"
-              echo ""
-              echo "[[registry]]"
-              echo "location = \"localhost\""
-              echo "insecure = true"
+              echo "short-name-mode = \"permissive\""
             } > ~/.config/containers/registries.conf
-            echo "Podman configured to allow short names from localhost and docker.io"
+            echo "Podman configured for permissive short-name mode"
             cat ~/.config/containers/registries.conf
         # Otherwise check for docker service
         elif systemctl is-active --quiet docker; then
