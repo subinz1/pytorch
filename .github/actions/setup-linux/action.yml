@@ -53,6 +53,7 @@ runs:
 
             # Configure podman to allow short names without prompting
             mkdir -p ~/.config/containers
+            rm -f ~/.config/containers/registries.conf
             {
               echo "unqualified-search-registries = ['docker.io', 'localhost']"
               echo ""
@@ -61,6 +62,7 @@ runs:
               echo "insecure = true"
             } > ~/.config/containers/registries.conf
             echo "Podman configured to allow short names from localhost and docker.io"
+            cat ~/.config/containers/registries.conf
         # Otherwise check for docker service
         elif systemctl is-active --quiet docker; then
             echo "Docker daemon is running...";
