@@ -98,6 +98,8 @@ RUN bash ./install_conda.sh && rm install_conda.sh
 # Install CUDA
 FROM base as cuda
 ARG CUDA_VERSION=12.8
+# Ensure PATH includes system binaries
+ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 RUN rm -rf /usr/local/cuda-*
 ADD ./common/install_cuda.sh install_cuda.sh
 COPY ./common/install_nccl.sh install_nccl.sh
@@ -107,7 +109,7 @@ ENV CUDA_HOME=/usr/local/cuda-${CUDA_VERSION}
 # Preserve CUDA_VERSION for the builds
 ENV CUDA_VERSION=${CUDA_VERSION}
 # Make things in our path by default
-ENV PATH=/usr/local/cuda-${CUDA_VERSION}/bin:$PATH
+ENV PATH=/usr/local/cuda-${CUDA_VERSION}/bin:${PATH}
 
 FROM cuda as cuda12.8
 RUN bash ./install_cuda.sh 12.8
