@@ -62,6 +62,7 @@ fi
 docker build \
   --target final \
   --format docker \
+  --layers=true \
   --progress plain \
   --build-arg "BASE_TARGET=${BASE_TARGET}" \
   ${EXTRA_BUILD_ARGS} \
