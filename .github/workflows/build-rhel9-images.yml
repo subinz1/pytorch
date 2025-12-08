@@ -64,8 +64,8 @@ jobs:
           # Create storage and temp directories
           mkdir -p ~/.local/share/containers/storage
           mkdir -p ~/tmp
-          # Set TMPDIR to use home directory
-          echo "TMPDIR=$HOME/tmp" >> $GITHUB_ENV
+          # Export TMPDIR for current shell
+          export TMPDIR=$HOME/tmp
 
       - name: Build and tag RHEL 9 Docker image
         shell: bash
