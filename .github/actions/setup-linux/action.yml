@@ -54,8 +54,7 @@ runs:
             # Configure podman to allow short names without prompting
             mkdir -p ~/.config/containers
             {
-              echo "[registries.search]"
-              echo "registries = ['docker.io', 'localhost']"
+              echo "unqualified-search-registries = ['docker.io', 'localhost']"
               echo ""
               echo "[[registry]]"
               echo "location = \"localhost\""

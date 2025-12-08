@@ -253,7 +253,7 @@ jobs:
       - name: Download pytest cache
         uses: ./.github/actions/pytest-cache-download
         continue-on-error: true
-        if: inputs.build-environment != 'linux-s390x-binary-manywheel' && steps.use-old-whl.outputs.reuse != 'true'
+        if: inputs.build-environment != 'linux-s390x-binary-manywheel' && inputs.build-environment != 'linux-rhel-9.6-py3.12-gcc11' && steps.use-old-whl.outputs.reuse != 'true'
         with:
           cache_dir: .pytest_cache
           job_identifier: ${{ github.workflow }}_${{ inputs.build-environment }}
