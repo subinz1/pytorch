@@ -62,6 +62,13 @@ jobs:
           [storage.options.overlay]
           mountopt = "nodev,metacopy=on"
           EOF
+
+          # Configure podman short-name mode to permissive (don't prompt for short names)
+          # This allows podman to use local images without trying to pull from registries
+          cat > ~/.config/containers/registries.conf << EOF
+          short-name-mode = "permissive"
+          EOF
+
           # Create storage and temp directories
           mkdir -p ~/.local/share/containers/storage
           mkdir -p ~/tmp
