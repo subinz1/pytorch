@@ -38,8 +38,9 @@ jobs:
       - name: Clean up stale podman containers and configure storage
         shell: bash
         run: |
-          # Reset podman storage to clean state
-          podman system reset -f || true
+          # Clean up old containers and images (but don't reset storage)
+          podman container prune -f || true
+          podman image prune -f || true
 
           # Create podman config directory
           mkdir -p ~/.config/containers
