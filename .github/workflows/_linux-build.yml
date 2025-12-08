@@ -282,6 +282,10 @@ jobs:
           BUILD_ADDITIONAL_PACKAGES: ${{ inputs.build-additional-packages }}
           RUNNER: ${{ inputs.runner }}
         run: |
+          # Re-configure podman short-name mode before docker run to ensure local images work
+          mkdir -p ~/.config/containers
+          echo 'short-name-mode = "permissive"' > ~/.config/containers/registries.conf
+
           START_TIME=$(date +%s)
           if [[ ${BUILD_ENVIRONMENT} == *"s390x"* ]]; then
             JENKINS_USER=
