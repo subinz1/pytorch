@@ -71,8 +71,9 @@ RUN ln -sf /usr/bin/python3.12 /usr/bin/python3 && \
     ln -sf /usr/bin/python3.12 /usr/bin/python && \
     python3.12 -m pip install --upgrade pip
 
-# Install cmake via pip
-RUN python3.12 -m pip install cmake==3.18.4 && \
+# Install cmake, setuptools, and wheel via pip
+# setuptools and wheel are required for PyTorch's setup.py
+RUN python3.12 -m pip install cmake==3.18.4 setuptools wheel && \
     ln -s /usr/local/bin/cmake /usr/bin/cmake3
 
 # Configure git to trust all directories
