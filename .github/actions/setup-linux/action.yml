@@ -105,6 +105,8 @@ runs:
         # ignore expansion of "docker ps -q" since it could be empty
         # shellcheck disable=SC2046
         docker stop $(docker ps -q) || true
+        # Remove stopped containers before pruning images
+        docker container prune -f || true
         # Prune all of the docker images
         docker system prune -af
 
