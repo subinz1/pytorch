@@ -282,6 +282,19 @@ jobs:
           BUILD_ADDITIONAL_PACKAGES: ${{ inputs.build-additional-packages }}
           RUNNER: ${{ inputs.runner }}
         run: |
+          # Import RHEL Docker image from persistent storage if it exists
+          if [[ ${BUILD_ENVIRONMENT} == *"rhel"* ]]; then
+            if [ -f ~/docker-images/rhel9-py3.12-gcc11.tar ]; then
+              echo "Importing RHEL Docker image from ~/docker-images/rhel9-py3.12-gcc11.tar..."
+              docker load -i ~/docker-images/rhel9-py3.12-gcc11.tar
+              echo "Image imported successfully!"
+              docker images | grep ci-image
+            else
+              echo "Warning: RHEL image tar file not found at ~/docker-images/rhel9-py3.12-gcc11.tar"
+              echo "This may cause the build to fail if the image doesn't exist locally"
+            fi
+          fi
+
           # Re-configure podman short-name mode before docker run to ensure local images work
           mkdir -p ~/.config/containers
           echo 'short-name-mode = "permissive"' > ~/.config/containers/registries.conf
