@@ -106,6 +106,9 @@ jobs:
           # Create persistent directory for Docker images
           mkdir -p ~/docker-images
 
+          # Remove old tar file if it exists (podman doesn't overwrite)
+          rm -f ~/docker-images/rhel9-py3.12-gcc11.tar
+
           # Export the image to tar file
           echo "Exporting ci-image:pytorch-rhel-9.6-py3.12-gcc11 to tar file..."
           docker save -o ~/docker-images/rhel9-py3.12-gcc11.tar ci-image:pytorch-rhel-9.6-py3.12-gcc11
