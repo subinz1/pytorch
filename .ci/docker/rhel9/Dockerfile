@@ -139,6 +139,10 @@ COPY ./common/install_jni.sh install_jni.sh
 COPY ./java/jni.h jni.h
 RUN bash ./install_jni.sh && rm install_jni.sh
 
+# Install jenkins user for CI
+COPY ./common/install_user.sh install_user.sh
+RUN bash ./install_user.sh && rm install_user.sh
+
 # Set PATH with CUDA before conda to ensure nvcc is found
 ENV PATH /usr/local/cuda-${CUDA_VERSION}/bin:/opt/conda/bin:$PATH
 ENV CUDA_HOME /usr/local/cuda-${CUDA_VERSION}
