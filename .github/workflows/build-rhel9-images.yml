@@ -92,6 +92,15 @@ jobs:
           # Also tag without CUDA version suffix for nightly workflow compatibility
           docker tag "$NEW_IMAGE" ci-image:pytorch-rhel-9.6-py3.12-gcc11
 
+          # Verify jenkins user exists in the image after tagging
+          echo "Verifying jenkins user exists in the image..."
+          if docker run --rm ci-image:pytorch-rhel-9.6-py3.12-gcc11 id jenkins; then
+            echo "Jenkins user verified successfully!"
+          else
+            echo "ERROR: Jenkins user NOT found in the image!"
+            exit 1
+          fi
+
       - name: List built Docker images
         run: |
           echo "=== Newly built RHEL images ==="
@@ -103,15 +112,6 @@ jobs:
       - name: Export Docker image to persistent storage
         shell: bash
         run: |
-          # Verify jenkins user exists in the image BEFORE exporting
-          echo "Verifying jenkins user exists in the image..."
-          if docker run --rm ci-image:pytorch-rhel-9.6-py3.12-gcc11 id jenkins; then
-            echo "Jenkins user verified successfully!"
-          else
-            echo "ERROR: Jenkins user NOT found in the image!"
-            exit 1
-          fi
-
           # Create persistent directory for Docker images
           mkdir -p ~/docker-images
 
