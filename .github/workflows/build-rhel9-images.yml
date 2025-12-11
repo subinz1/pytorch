@@ -103,6 +103,15 @@ jobs:
       - name: Export Docker image to persistent storage
         shell: bash
         run: |
+          # Verify jenkins user exists in the image BEFORE exporting
+          echo "Verifying jenkins user exists in the image..."
+          if docker run --rm ci-image:pytorch-rhel-9.6-py3.12-gcc11 id jenkins; then
+            echo "Jenkins user verified successfully!"
+          else
+            echo "ERROR: Jenkins user NOT found in the image!"
+            exit 1
+          fi
+
           # Create persistent directory for Docker images
           mkdir -p ~/docker-images
 
@@ -114,20 +123,10 @@ jobs:
           echo "Exporting ci-image:pytorch-rhel-9.6-py3.12-gcc11 to tar file..."
           docker save -o ~/docker-images/rhel9-py3.12-gcc11.tar ci-image:pytorch-rhel-9.6-py3.12-gcc11
 
-          # Verify the tar file was created and is valid
+          # Verify the tar file was created
           ls -lh ~/docker-images/rhel9-py3.12-gcc11.tar
           echo "Image exported successfully to ~/docker-images/rhel9-py3.12-gcc11.tar"
 
-          # Verify jenkins user exists in the exported image
-          echo "Verifying jenkins user exists in the image..."
-          docker load -i ~/docker-images/rhel9-py3.12-gcc11.tar
-          if docker run --rm ci-image:pytorch-rhel-9.6-py3.12-gcc11 id jenkins; then
-            echo "Jenkins user verified successfully in the exported image!"
-          else
-            echo "ERROR: Jenkins user NOT found in the exported image!"
-            exit 1
-          fi
-
-          # Create a .ready marker file to signal that the tar is complete and validated
+          # Create a .ready marker file to signal that the tar is complete
           touch ~/docker-images/rhel9-py3.12-gcc11.tar.ready
           echo "Ready marker created: rhel9-py3.12-gcc11.tar.ready"
