@@ -5,7 +5,7 @@ ARG RHEL_OS_VERSION=9.4
 ARG OS_TYPE=x86_64
 ARG PY_VER=3.12
 ARG CUDA_VERSION=12-8
-ARG CUDNN_VERSION=12-8
+ARG CUDNN_VERSION=12.8
 ARG CONDA_ENV="pytorch_build"
 # This flag has to be set to true if there is no active subscription
 ARG ENABLE_SUBSCRIPTION=false
@@ -91,11 +91,11 @@ RUN python3.12 -m pip install setuptools wheel
 # Configure git to trust all directories
 RUN git config --global --add safe.directory '*'
 
-# Install Conda (full conda, not miniconda) and setup conda environment in one layer
-# Using Anaconda instead of Miniforge
-RUN wget --no-check-certificate https://repo.anaconda.com/archive/Anaconda3-2024.10-1-Linux-x86_64.sh && \
-    bash Anaconda3-2024.10-1-Linux-x86_64.sh -p /opt/conda -b && \
-    rm Anaconda3-2024.10-1-Linux-x86_64.sh && \
+# Install Miniforge and setup conda environment in one layer
+RUN wget --no-check-certificate https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh && \
+    chmod +x Miniforge3-Linux-x86_64.sh && \
+    bash Miniforge3-Linux-x86_64.sh -b -p /opt/conda && \
+    rm Miniforge3-Linux-x86_64.sh && \
     /opt/conda/bin/conda update -y conda && \
     /opt/conda/bin/conda init && \
     if [ -n "${PY_VER}" ]; then \
@@ -141,4 +141,4 @@ RUN touch /.condarc && \
     chmod o+rw /.condarc && \
     chmod -R o+rw /opt/conda
 
-WORKDIR /workspace
+WORKDIR /pytorch
