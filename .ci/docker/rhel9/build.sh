@@ -60,11 +60,9 @@ else
 fi
 
 docker build \
-  --target final \
   --format docker \
   --no-cache \
   --progress plain \
-  --build-arg "BASE_TARGET=${BASE_TARGET}" \
   ${EXTRA_BUILD_ARGS} \
   ${SUBSCRIPTION_ARGS} \
   -t ${tmp_tag} \
