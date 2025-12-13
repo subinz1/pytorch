@@ -4,7 +4,7 @@
 ARG RHEL_OS_VERSION=9.4
 ARG OS_TYPE=x86_64
 ARG PY_VER=3.12
-ARG CUDA_VERSION=12.8
+ARG CUDA_VERSION=12-8
 ARG CUDNN_VERSION=12.8
 ARG CONDA_ENV="pytorch_build"
 # This flag has to be set to true if there is no active subscription
