@@ -85,9 +85,8 @@ RUN ln -sf /usr/bin/python3.12 /usr/bin/python3 && \
     ln -sf /usr/bin/python3.12 /usr/bin/python && \
     python3.12 -m pip install --upgrade pip
 
-# Install cmake, setuptools, and wheel via pip
-RUN python3.12 -m pip install cmake==3.18.4 setuptools wheel && \
-    ln -s /usr/local/bin/cmake /usr/bin/cmake3
+# Install setuptools and wheel via pip (cmake already installed via DNF)
+RUN python3.12 -m pip install setuptools wheel
 
 # Configure git to trust all directories
 RUN git config --global --add safe.directory '*'
