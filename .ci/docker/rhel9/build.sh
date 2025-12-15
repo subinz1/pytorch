@@ -73,5 +73,7 @@ docker build \
 
 if [ -n "${CUDA_VERSION}" ]; then
   # Test that we're using the right CUDA compiler
-  docker run --rm "${tmp_tag}" nvcc --version | grep "cuda_${CUDA_VERSION}"
+  # Convert CUDA_VERSION back to dot format for nvcc version check (12-8 -> 12.8)
+  CUDA_VERSION_DOT=$(echo "${CUDA_VERSION}" | tr '-' '.')
+  docker run --rm "${tmp_tag}" nvcc --version | grep "release ${CUDA_VERSION_DOT}"
 fi
