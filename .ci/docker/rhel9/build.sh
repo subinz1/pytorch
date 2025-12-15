@@ -18,7 +18,8 @@ CUDA_VERSION=""
 EXTRA_BUILD_ARGS=""
 if [[ "${DOCKER_TAG_PREFIX}" == cuda* ]]; then
     # extract cuda version from image name and tag.  e.g. rhel9-builder:cuda12.8 returns 12.8
-    CUDA_VERSION=$(echo "${DOCKER_TAG_PREFIX}" | awk -F'cuda' '{print $2}')
+    # convert dots to hyphens for DNF package naming (12.8 -> 12-8)
+    CUDA_VERSION=$(echo "${DOCKER_TAG_PREFIX}" | awk -F'cuda' '{print $2}' | tr '.' '-')
     EXTRA_BUILD_ARGS="--build-arg CUDA_VERSION=${CUDA_VERSION}"
 fi
 
