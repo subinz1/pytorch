@@ -284,13 +284,26 @@ jobs:
         run: |
           # Import RHEL Docker image from persistent storage if it exists
           if [[ ${BUILD_ENVIRONMENT} == *"rhel"* ]]; then
-            if [ -f ~/docker-images/rhel9-py3.12-gcc11.tar ]; then
-              echo "Importing RHEL Docker image from ~/docker-images/rhel9-py3.12-gcc11.tar..."
-              docker load -i ~/docker-images/rhel9-py3.12-gcc11.tar
+            IMAGE_TAR_PATH="/mnt/podman_storage/vpcuser/docker-images/rhel9-py3.12-gcc11.tar"
+            READY_MARKER="${IMAGE_TAR_PATH}.ready"
+
+            # Wait for the .ready marker file (max 60 seconds)
+            for i in {1..12}; do
+              if [ -f "${READY_MARKER}" ]; then
+                echo "Ready marker found, proceeding with import..."
+                break
+              fi
+              echo "Waiting for Docker image to be ready... (attempt $i/12)"
+              sleep 5
+            done
+
+            if [ -f "${IMAGE_TAR_PATH}" ]; then
+              echo "Importing RHEL Docker image from ${IMAGE_TAR_PATH}..."
+              docker load -i "${IMAGE_TAR_PATH}"
               echo "Image imported successfully!"
               docker images | grep ci-image
             else
-              echo "Warning: RHEL image tar file not found at ~/docker-images/rhel9-py3.12-gcc11.tar"
+              echo "Warning: RHEL image tar file not found at ${IMAGE_TAR_PATH}"
               echo "This may cause the build to fail if the image doesn't exist locally"
             fi
           fi
