@@ -114,7 +114,10 @@ if [[ "$BUILD_ENVIRONMENT" == *riscv64* ]]; then
   export USE_MKLDNN=0
 
   export SLEEF_TARGET_EXEC_USE_QEMU=ON
-  sudo chown -R jenkins /var/lib/jenkins/workspace /opt
+  # RHEL images don't have jenkins user, skip chown
+  if [[ "$BUILD_ENVIRONMENT" != *"rhel"* ]]; then
+    sudo chown -R jenkins /var/lib/jenkins/workspace /opt
+  fi
 
 fi
 
@@ -252,6 +255,10 @@ if [[ "$BUILD_ENVIRONMENT" != *rocm* && "$BUILD_ENVIRONMENT" != *s390x* && "$BUI
   # Workaround for dind-rootless userid mapping (https://github.com/pytorch/ci-infra/issues/96)
   WORKSPACE_ORIGINAL_OWNER_ID=$(stat -c '%u' "/var/lib/jenkins/workspace")
   cleanup_workspace() {
+    # RHEL images don't have jenkins user, skip cleanup
+    if [[ "$BUILD_ENVIRONMENT" == *"rhel"* ]]; then
+      return
+    fi
     echo "sudo may print the following warning message that can be ignored. The chown command will still run."
     echo "    sudo: setrlimit(RLIMIT_STACK): Operation not permitted"
     echo "For more details refer to https://github.com/sudo-project/sudo/issues/42"
@@ -260,7 +267,10 @@ if [[ "$BUILD_ENVIRONMENT" != *rocm* && "$BUILD_ENVIRONMENT" != *s390x* && "$BUI
   # Disable shellcheck SC2064 as we want to parse the original owner immediately.
   # shellcheck disable=SC2064
   trap_add cleanup_workspace EXIT
-  sudo chown -R jenkins /var/lib/jenkins/workspace
+  # RHEL images don't have jenkins user, skip chown
+  if [[ "$BUILD_ENVIRONMENT" != *"rhel"* ]]; then
+    sudo chown -R jenkins /var/lib/jenkins/workspace
+  fi
   git config --global --add safe.directory /var/lib/jenkins/workspace
 fi
 
