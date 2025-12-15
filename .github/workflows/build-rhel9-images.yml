@@ -110,9 +110,9 @@ jobs:
           rm -f /mnt/podman_storage/vpcuser/docker-images/rhel9-py3.12-gcc11.tar
           rm -f /mnt/podman_storage/vpcuser/docker-images/rhel9-py3.12-gcc11.tar.ready
 
-          # Export the image to tar file
-          echo "Exporting ci-image:pytorch-rhel-9.6-py3.12-gcc11 to tar file..."
-          docker save -o /mnt/podman_storage/vpcuser/docker-images/rhel9-py3.12-gcc11.tar ci-image:pytorch-rhel-9.6-py3.12-gcc11
+          # Export the image to tar file (use localhost/ prefix for podman compatibility)
+          echo "Exporting localhost/ci-image:pytorch-rhel-9.6-py3.12-gcc11 to tar file..."
+          docker save -o /mnt/podman_storage/vpcuser/docker-images/rhel9-py3.12-gcc11.tar localhost/ci-image:pytorch-rhel-9.6-py3.12-gcc11
 
           # Verify the tar file was created
           ls -lh /mnt/podman_storage/vpcuser/docker-images/rhel9-py3.12-gcc11.tar
