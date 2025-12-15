@@ -5,7 +5,7 @@ ARG RHEL_OS_VERSION=9.4
 ARG OS_TYPE=x86_64
 ARG PY_VER=3.12
 ARG CUDA_VERSION=12-8
-ARG CUDNN_VERSION=12-8
+ARG CUDNN_VERSION=12.8
 ARG CONDA_ENV="pytorch_build"
 # This flag has to be set to true if there is no active subscription
 ARG ENABLE_SUBSCRIPTION=false
@@ -57,7 +57,6 @@ RUN dnf -y update && \
     gcc \
     gcc-c++ \
     make \
-    cmake \
     ninja-build \
     lld \
     openblas \
@@ -85,8 +84,9 @@ RUN ln -sf /usr/bin/python3.12 /usr/bin/python3 && \
     ln -sf /usr/bin/python3.12 /usr/bin/python && \
     python3.12 -m pip install --upgrade pip
 
-# Install setuptools and wheel via pip (cmake already installed via DNF)
-RUN python3.12 -m pip install setuptools wheel
+# Install CMake 3.27+ via pip (PyTorch requires >= 3.27)
+# Also install setuptools and wheel
+RUN python3.12 -m pip install 'cmake>=3.27' setuptools wheel
 
 # Configure git to trust all directories
 RUN git config --global --add safe.directory '*'
