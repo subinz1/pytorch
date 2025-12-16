@@ -13,9 +13,16 @@ if [[ "$BUILD_ENVIRONMENT" != *win-* ]]; then
     fi
 
     if which sccache > /dev/null; then
+        # For RHEL builds, use local disk cache instead of S3 to avoid AWS credential issues
+        if [[ "$BUILD_ENVIRONMENT" == *rhel* ]]; then
+          echo "Configuring sccache for local disk cache (RHEL build)"
+          export SCCACHE_DIR=/tmp/sccache
+          mkdir -p /tmp/sccache
+          unset SCCACHE_BUCKET
+          unset SCCACHE_REGION
         # Clear SCCACHE_BUCKET and SCCACHE_REGION if they are empty, otherwise
         # sccache will complain about invalid bucket configuration
-        if [[ -z "${SCCACHE_BUCKET:-}" ]]; then
+        elif [[ -z "${SCCACHE_BUCKET:-}" ]]; then
           unset SCCACHE_BUCKET
           unset SCCACHE_REGION
         fi
