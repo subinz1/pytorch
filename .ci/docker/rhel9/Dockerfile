@@ -115,11 +115,14 @@ RUN . /opt/conda/etc/profile.d/conda.sh && \
     dnf -y install cuda-toolkit-${CUDA_VERSION} && \
     conda install -y nvidia::cudnn cuda-version=${CUDNN_VERSION}
 
-# Install sccache, build package, and PyTorch build dependencies via conda/pip
+# Install sccache and PyTorch build dependencies via conda/pip
+# Download and install all requirements from upstream PyTorch requirements-ci.txt
 RUN . /opt/conda/etc/profile.d/conda.sh && \
     conda activate ${CONDA_ENV} && \
     conda install -y sccache && \
-    pip install build pyyaml 'typing-extensions>=4.10.0' requests six ninja
+    curl -fsSL https://raw.githubusercontent.com/pytorch/pytorch/main/.ci/docker/requirements-ci.txt -o /tmp/requirements-ci.txt && \
+    pip install -r /tmp/requirements-ci.txt && \
+    rm /tmp/requirements-ci.txt
 
 # Set OpenBLAS paths (only effective when LAPACK is enabled)
 ENV OpenBLAS_HOME=/usr/lib64:${OpenBLAS_HOME}
