@@ -115,11 +115,11 @@ RUN . /opt/conda/etc/profile.d/conda.sh && \
     dnf -y install cuda-toolkit-${CUDA_VERSION} && \
     conda install -y nvidia::cudnn cuda-version=${CUDNN_VERSION}
 
-# Install sccache and build package via conda
+# Install sccache, build package, and PyTorch build dependencies via conda/pip
 RUN . /opt/conda/etc/profile.d/conda.sh && \
     conda activate ${CONDA_ENV} && \
     conda install -y sccache && \
-    pip install build
+    pip install build pyyaml 'typing-extensions>=4.10.0' requests six ninja
 
 # Set OpenBLAS paths (only effective when LAPACK is enabled)
 ENV OpenBLAS_HOME=/usr/lib64:${OpenBLAS_HOME}
