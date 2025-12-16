@@ -125,7 +125,8 @@ RUN . /opt/conda/etc/profile.d/conda.sh && \
 ENV OpenBLAS_HOME=/usr/lib64:${OpenBLAS_HOME}
 
 # Adding CUDA and library to the paths
-ENV PATH=/usr/local/cuda/bin:/opt/conda/bin:$PATH
+# Use the pytorch_build conda environment bin directory
+ENV PATH=/usr/local/cuda/bin:/opt/conda/envs/${CONDA_ENV}/bin:/opt/conda/bin:$PATH
 ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
 ENV CUDA_HOME=/usr/local/cuda
 
