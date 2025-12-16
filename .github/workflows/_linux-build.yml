@@ -409,7 +409,12 @@ jobs:
             docker exec -t "${container_name}" sh -c "python3 -m pip install -r requirements.txt"
           fi
 
-          docker exec -t "${container_name}" sh -c '.ci/pytorch/build.sh'
+          # Use bash for RHEL builds to ensure conda environment is properly activated
+          if [[ ${BUILD_ENVIRONMENT} == *"rhel"* ]]; then
+            docker exec -t "${container_name}" bash -c '.ci/pytorch/build.sh'
+          else
+            docker exec -t "${container_name}" sh -c '.ci/pytorch/build.sh'
+          fi
 
           END_TIME=$(date +%s)
           echo "build_time=$((END_TIME - START_TIME))" >> "$GITHUB_OUTPUT"
