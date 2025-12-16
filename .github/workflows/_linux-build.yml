@@ -259,6 +259,21 @@ jobs:
           job_identifier: ${{ github.workflow }}_${{ inputs.build-environment }}
           s3_bucket: ${{ inputs.s3-bucket }}
 
+      - name: Install PyTorch build dependencies (RHEL)
+        if: contains(inputs.build-environment, 'rhel')
+        shell: bash
+        run: |
+          # Install PyTorch build dependencies in the RHEL environment
+          if [[ ${BUILD_ENVIRONMENT} == *"rhel"* ]]; then
+            echo "Installing PyTorch build dependencies..."
+            pip install --upgrade pip
+            pip install pyyaml 'typing-extensions>=4.10.0' cmake requests six ninja build
+            echo "Dependencies installed successfully!"
+            pip list | grep -E "pyyaml|typing-extensions|cmake|requests|six|ninja|build"
+          fi
+        env:
+          BUILD_ENVIRONMENT: ${{ inputs.build-environment }}
+
       - name: Build
         if: (steps.filter.outputs.is-test-matrix-empty == 'False' || inputs.test-matrix == '') && steps.use-old-whl.outputs.reuse != 'true'
         id: build
