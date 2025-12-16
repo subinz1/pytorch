@@ -115,10 +115,11 @@ RUN . /opt/conda/etc/profile.d/conda.sh && \
     dnf -y install cuda-toolkit-${CUDA_VERSION} && \
     conda install -y nvidia::cudnn cuda-version=${CUDNN_VERSION}
 
-# Install sccache via conda
+# Install sccache and build package via conda
 RUN . /opt/conda/etc/profile.d/conda.sh && \
     conda activate ${CONDA_ENV} && \
-    conda install -y sccache
+    conda install -y sccache && \
+    pip install build
 
 # Set OpenBLAS paths (only effective when LAPACK is enabled)
 ENV OpenBLAS_HOME=/usr/lib64:${OpenBLAS_HOME}
