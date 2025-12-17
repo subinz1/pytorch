@@ -287,6 +287,11 @@ jobs:
             IMAGE_TAR_PATH="/mnt/podman_storage/vpcuser/docker-images/rhel9-py3.12-gcc11.tar"
             READY_MARKER="${IMAGE_TAR_PATH}.ready"
 
+            # Remove any existing old images with the same tag to avoid conflicts
+            echo "Removing any existing RHEL images to ensure fresh import..."
+            docker rmi localhost/ci-image:pytorch-rhel-9.6-py3.12-gcc11 2>/dev/null || true
+            docker rmi ci-image:pytorch-rhel-9.6-py3.12-gcc11 2>/dev/null || true
+
             # Wait for the .ready marker file (max 60 seconds)
             for i in {1..12}; do
               if [ -f "${READY_MARKER}" ]; then
