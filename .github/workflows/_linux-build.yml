@@ -421,7 +421,8 @@ jobs:
 
           # Use bash for RHEL builds to ensure conda environment is properly activated
           if [[ ${BUILD_ENVIRONMENT} == *"rhel"* ]]; then
-            docker exec -t "${container_name}" bash -c '.ci/pytorch/build.sh'
+            # Use login shell to ensure ENV variables from Dockerfile are loaded
+            docker exec -t "${container_name}" bash -l -c '. /opt/conda/etc/profile.d/conda.sh && conda activate pytorch_build && .ci/pytorch/build.sh'
           else
             docker exec -t "${container_name}" sh -c '.ci/pytorch/build.sh'
           fi
