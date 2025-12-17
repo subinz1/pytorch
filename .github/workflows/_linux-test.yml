@@ -124,7 +124,7 @@ jobs:
         if: inputs.build-environment != 'linux-s390x-binary-manywheel' && !contains(matrix.runner, 'b200')
 
       - name: configure aws credentials
-        if: ${{ inputs.aws-role-to-assume != '' && inputs.build-environment != 'linux-s390x-binary-manywheel' }}
+        if: ${{ inputs.aws-role-to-assume != '' && inputs.build-environment != 'linux-s390x-binary-manywheel' && !contains(inputs.build-environment, 'rhel') }}
         uses: aws-actions/configure-aws-credentials@ececac1a45f3b08a01d2dd070d28d111c5fe6722 # v4.1.0
         with:
           role-to-assume: ${{ inputs.aws-role-to-assume }}
@@ -132,21 +132,56 @@ jobs:
           aws-region: us-east-1
 
       - name: Login to Amazon ECR
-        if: ${{ inputs.aws-role-to-assume != '' && contains(matrix.runner, 'b200') }}
+        if: ${{ inputs.aws-role-to-assume != '' && contains(matrix.runner, 'b200') && !contains(inputs.build-environment, 'rhel') }}
         id: login-ecr
         continue-on-error: true
         uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076 # v2.0.1
 
+      - name: Import RHEL Docker image from local storage
+        if: contains(inputs.build-environment, 'rhel')
+        shell: bash
+        run: |
+          # Import RHEL Docker image from persistent storage
+          IMAGE_TAR_PATH="/mnt/podman_storage/vpcuser/docker-images/rhel9-py3.12-gcc11.tar"
+          READY_MARKER="${IMAGE_TAR_PATH}.ready"
+
+          # Wait for the .ready marker file (max 60 seconds)
+          for i in {1..12}; do
+            if [ -f "${READY_MARKER}" ]; then
+              echo "Ready marker found, proceeding with import..."
+              break
+            fi
+            echo "Waiting for Docker image to be ready... (attempt $i/12)"
+            sleep 5
+          done
+
+          if [ -f "${IMAGE_TAR_PATH}" ]; then
+            echo "Importing RHEL Docker image from ${IMAGE_TAR_PATH}..."
+            docker load -i "${IMAGE_TAR_PATH}"
+            echo "Image imported successfully!"
+            docker images | grep ci-image
+          else
+            echo "Error: RHEL image tar file not found at ${IMAGE_TAR_PATH}"
+            exit 1
+          fi
+
       - name: Calculate docker image
         id: calculate-docker-image
         uses: pytorch/test-infra/.github/actions/calculate-docker-image@main
-        if: inputs.build-environment != 'linux-s390x-binary-manywheel'
+        if: inputs.build-environment != 'linux-s390x-binary-manywheel' && !contains(inputs.build-environment, 'rhel')
         with:
           docker-image-name: ${{ inputs.docker-image }}
 
+      - name: Set RHEL docker image
+        id: set-rhel-image
+        if: contains(inputs.build-environment, 'rhel')
+        shell: bash
+        run: |
+          echo "docker-image=${{ inputs.docker-image }}" >> "${GITHUB_OUTPUT}"
+
       - name: Use following to pull public copy of the image
         id: print-ghcr-mirror
-        if: inputs.build-environment != 'linux-s390x-binary-manywheel'
+        if: inputs.build-environment != 'linux-s390x-binary-manywheel' && !contains(inputs.build-environment, 'rhel')
         env:
           ECR_DOCKER_IMAGE: ${{ steps.calculate-docker-image.outputs.docker-image }}
         shell: bash
@@ -156,7 +191,7 @@ jobs:
 
       - name: Pull docker image
         uses: pytorch/test-infra/.github/actions/pull-docker-image@main
-        if: inputs.build-environment != 'linux-s390x-binary-manywheel'
+        if: inputs.build-environment != 'linux-s390x-binary-manywheel' && !contains(inputs.build-environment, 'rhel')
         with:
           docker-image: ${{ steps.calculate-docker-image.outputs.docker-image }}
 
@@ -218,7 +253,8 @@ jobs:
         with:
           name: ${{ inputs.build-environment }}
           s3-bucket: ${{ inputs.s3-bucket }}
-          use-gha: ${{ inputs.use-gha }}
+          # Use GitHub Actions artifacts for RHEL (no S3/AWS), S3 for others based on use-gha flag
+          use-gha: ${{ contains(inputs.build-environment, 'rhel') || inputs.use-gha }}
 
       - name: Download TD artifacts
         continue-on-error: true
@@ -326,7 +362,7 @@ jobs:
           SCCACHE_BUCKET: ${{ !contains(matrix.runner, 'b200') && 'ossci-compiler-cache-circleci-v2' || '' }}
           SCCACHE_REGION: ${{ !contains(matrix.runner, 'b200') && 'us-east-1' || '' }}
           SHM_SIZE: ${{ steps.install-nvidia-driver.outputs.has-nvidia == 'true' && '2g' || '1g' }}
-          DOCKER_IMAGE: ${{ steps.calculate-docker-image.outputs.docker-image }}
+          DOCKER_IMAGE: ${{ steps.calculate-docker-image.outputs.docker-image || steps.set-rhel-image.outputs.docker-image }}
           DOCKER_IMAGE_S390X: ${{ inputs.docker-image }}
           XLA_CUDA: ${{ contains(inputs.build-environment, 'xla') && '0' || '' }}
           XLA_CLANG_CACHE_S3_BUCKET_NAME: ossci-compiler-clang-cache-circleci-xla
@@ -362,6 +398,12 @@ jobs:
             # when job is cancelled
             DOCKER_SHELL_CMD="sleep 12h"
             USED_IMAGE="${DOCKER_IMAGE_S390X}"
+          elif [[ ${BUILD_ENVIRONMENT} == *"rhel"* ]]; then
+            # RHEL images don't have jenkins user setup, run as root
+            SHM_OPTS="--shm-size=${SHM_SIZE}"
+            JENKINS_USER=
+            DOCKER_SHELL_CMD=
+            USED_IMAGE="${DOCKER_IMAGE}"
           else
             SHM_OPTS="--shm-size=${SHM_SIZE}"
             JENKINS_USER="--user jenkins"
