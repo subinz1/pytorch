@@ -81,11 +81,12 @@ jobs:
           cd .ci/docker/rhel9
           # Build script creates image with temp tag starting with "tmp."
           ./build.sh rhel9-builder:${{ matrix.tag }}
-          # Find the tmp.* tagged image created by build.sh
-          NEW_IMAGE=$(docker images --format '{{.Repository}}:{{.Tag}}' | grep '^tmp\.' | head -1)
+          # Find the tmp.* tagged image created by build.sh (podman prefixes with localhost/)
+          NEW_IMAGE=$(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'tmp\.' | head -1)
           if [ -z "$NEW_IMAGE" ]; then
-            # Fallback: look for localhost/tmp.*
-            NEW_IMAGE=$(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'tmp\.' | head -1)
+            echo "Error: Could not find tmp.* image after build"
+            docker images
+            exit 1
           fi
           echo "New image created: $NEW_IMAGE"
           # Tag it with the expected names
