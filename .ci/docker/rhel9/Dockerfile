@@ -1,7 +1,7 @@
 # RHEL 9.6 Docker image for PyTorch CI with simplified single-stage build
 
 # GLOBAL ARGS
-ARG RHEL_OS_VERSION=9.4
+ARG RHEL_OS_VERSION=9.6
 ARG OS_TYPE=x86_64
 ARG PY_VER=3.12
 ARG CUDA_VERSION=12-8

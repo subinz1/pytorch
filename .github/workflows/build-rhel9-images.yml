@@ -79,12 +79,14 @@ jobs:
         shell: bash
         run: |
           cd .ci/docker/rhel9
-          # Build script creates image with temp tag, we need to find it and tag properly
-          BEFORE_IMAGES=$(docker images --format '{{.Repository}}:{{.Tag}}' | sort)
+          # Build script creates image with temp tag starting with "tmp."
           ./build.sh rhel9-builder:${{ matrix.tag }}
-          AFTER_IMAGES=$(docker images --format '{{.Repository}}:{{.Tag}}' | sort)
-          # Find the newly created image (the temp tag)
-          NEW_IMAGE=$(comm -13 <(echo "$BEFORE_IMAGES") <(echo "$AFTER_IMAGES") | grep -v '<none>' | head -1)
+          # Find the tmp.* tagged image created by build.sh
+          NEW_IMAGE=$(docker images --format '{{.Repository}}:{{.Tag}}' | grep '^tmp\.' | head -1)
+          if [ -z "$NEW_IMAGE" ]; then
+            # Fallback: look for localhost/tmp.*
+            NEW_IMAGE=$(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'tmp\.' | head -1)
+          fi
           echo "New image created: $NEW_IMAGE"
           # Tag it with the expected names
           docker tag "$NEW_IMAGE" rhel9-builder:${{ matrix.tag }}
