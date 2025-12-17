@@ -488,6 +488,15 @@ jobs:
           if-no-files-found: error
           path: artifacts.zip
 
+      - name: Store PyTorch Build Artifacts for RHEL
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: inputs.build-generates-artifacts && (steps.build.outcome != 'skipped' || steps.use-old-whl.outputs.reuse == 'true') && inputs.build-environment == 'linux-rhel-9.6-py3.12-gcc11'
+        with:
+          name: ${{ inputs.build-environment }}
+          retention-days: 14
+          if-no-files-found: error
+          path: artifacts.zip
+
       - name: copy logs
         shell: bash
         if: ${{ always() && steps.build.outcome != 'skipped' && !inputs.disable-monitor && inputs.build-environment != 'linux-s390x-binary-manywheel' && inputs.build-environment != 'linux-rhel-9.6-py3.12-gcc11'}}
