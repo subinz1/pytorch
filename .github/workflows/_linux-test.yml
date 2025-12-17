@@ -401,7 +401,8 @@ jobs:
             USED_IMAGE="${DOCKER_IMAGE_S390X}"
           elif [[ ${BUILD_ENVIRONMENT} == *"rhel"* ]]; then
             # RHEL images don't have jenkins user setup, run as root
-            SHM_OPTS="--shm-size=${SHM_SIZE}"
+            # Cannot use --shm-size with --ipc=host, so leave SHM_OPTS empty
+            SHM_OPTS=
             JENKINS_USER=
             DOCKER_SHELL_CMD=
             USED_IMAGE="${DOCKER_IMAGE}"
