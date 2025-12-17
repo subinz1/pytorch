@@ -206,6 +206,7 @@ jobs:
         with:
           driver-version: ${{ matrix.config == 'legacy_nvidia_driver' && '525.105.17' || '580.82.07' }}
         if: ${{ !contains(matrix.runner, 'b200') }}
+        continue-on-error: true
 
       - name: Setup GPU_FLAG for docker run
         id: setup-gpu-flag
@@ -563,6 +564,8 @@ jobs:
       - name: Teardown Linux
         uses: pytorch/test-infra/.github/actions/teardown-linux@main
         if: always() && steps.check_container_runner.outputs.IN_CONTAINER_RUNNER == 'false'
+        with:
+          skip-wait-ssh: "true"
 
       # NB: We are currently having an intermittent GPU-related issue on G5 runners with
       # A10G GPU. Once this happens, trying to reset the GPU as done in setup-nvidia does

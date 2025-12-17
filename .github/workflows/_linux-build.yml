@@ -524,6 +524,8 @@ jobs:
       - name: Teardown Linux
         uses: pytorch/test-infra/.github/actions/teardown-linux@main
         if: always() && inputs.build-environment != 'linux-s390x-binary-manywheel' && inputs.build-environment != 'linux-rhel-9.6-py3.12-gcc11'
+        with:
+          skip-wait-ssh: "true"
 
       - name: Cleanup docker
         if: always() && inputs.build-environment == 'linux-s390x-binary-manywheel'

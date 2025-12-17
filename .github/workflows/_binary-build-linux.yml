@@ -281,6 +281,8 @@ jobs:
       - name: Teardown Linux
         if: always() && inputs.build_environment != 'linux-s390x-binary-manywheel'
         uses: pytorch/test-infra/.github/actions/teardown-linux@main
+        with:
+          skip-wait-ssh: "true"
 
       - name: Chown workspace
         if: always() && inputs.build_environment != 'linux-s390x-binary-manywheel'
