@@ -51,6 +51,7 @@ jobs:
       runner: "test-runner-git-109-vpc"
       build-environment: linux-rhel-9.6-py3.12-gcc11
       docker-image-name: ci-image:pytorch-rhel-9.6-py3.12-gcc11
+      cuda-arch-list: "9.0"
       test-matrix: |
         { include: [
           { config: "default", shard: 1, num_shards: 3, runner: "test-runner-git-109-vpc" },
