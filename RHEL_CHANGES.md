@@ -570,6 +570,22 @@ rhel-9_6-py3_12-gcc11-build:
   secrets: inherit
 ```
 
+### Issue 14: Triton Not Installed
+**Error**: `torch._inductor.exc.TritonMissing: Cannot find a working triton installation`
+
+**Root Cause**: The test `dynamo/test_aot_compile.py::TestAOTCompile::test_aot_compile_with_aoti` failed because Triton (a Python library for GPU programming) was not installed in the RHEL Docker image. Triton is required by PyTorch's inductor for certain optimizations and AOT compilation.
+
+**Solution**: Added Triton installation to `.ci/docker/rhel9/Dockerfile`:
+```dockerfile
+RUN . /opt/conda/etc/profile.d/conda.sh && \
+    conda activate ${CONDA_ENV} && \
+    conda install -y sccache && \
+    curl -fsSL https://raw.githubusercontent.com/pytorch/pytorch/main/.ci/docker/requirements-ci.txt -o /tmp/requirements-ci.txt && \
+    pip install -r /tmp/requirements-ci.txt && \
+    rm /tmp/requirements-ci.txt && \
+    pip install triton
+```
+
 ---
 
 ## Testing
@@ -624,6 +640,7 @@ jobs:
 - Simplified from multi-stage to single-stage build
 - Added Miniforge/conda setup with `pytorch_build` environment
 - Installed all PyTorch CI requirements from upstream
+- Added Triton installation for inductor support
 - Removed jenkins user setup (run as root)
 - Fixed PATH to include conda environment
 - Added auto-activation of conda environment in bashrc

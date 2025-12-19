@@ -122,7 +122,8 @@ RUN . /opt/conda/etc/profile.d/conda.sh && \
     conda install -y sccache && \
     curl -fsSL https://raw.githubusercontent.com/pytorch/pytorch/main/.ci/docker/requirements-ci.txt -o /tmp/requirements-ci.txt && \
     pip install -r /tmp/requirements-ci.txt && \
-    rm /tmp/requirements-ci.txt
+    rm /tmp/requirements-ci.txt && \
+    pip install triton
 
 # Set OpenBLAS paths (only effective when LAPACK is enabled)
 ENV OpenBLAS_HOME=/usr/lib64:${OpenBLAS_HOME}
