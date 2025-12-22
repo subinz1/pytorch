@@ -597,10 +597,15 @@ RUN . /opt/conda/etc/profile.d/conda.sh && \
 When these tests run without proper setup, they fail with import errors because cutlass_cppgen is not available.
 
 **Solution**: Exclude CUTLASS backend tests from RHEL test runs by adding to `_linux-test.yml`:
-```yaml
+```bash
 elif [[ ${BUILD_ENVIRONMENT} == *"rhel"* ]]; then
   # Exclude CUTLASS tests for RHEL builds (requires special CUTLASS setup not available on RHEL)
   export PYTHON_TEST_EXTRA_OPTION="--exclude inductor/test_cutlass_backend inductor/test_cutlass_evt"
+```
+
+And pass the environment variable to the Docker container:
+```bash
+-e PYTHON_TEST_EXTRA_OPTION \
 ```
 
 This follows the pattern where certain inductor tests (like test_cutlass_backend) are excluded from `test_inductor_core()` and only run in specialized test configurations.
