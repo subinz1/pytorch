@@ -406,6 +406,8 @@ jobs:
             JENKINS_USER=
             DOCKER_SHELL_CMD=
             USED_IMAGE="${DOCKER_IMAGE}"
+            # Exclude CUTLASS tests for RHEL builds (requires special CUTLASS setup not available on RHEL)
+            export PYTHON_TEST_EXTRA_OPTION="--exclude inductor/test_cutlass_backend inductor/test_cutlass_evt"
           else
             SHM_OPTS="--shm-size=${SHM_SIZE}"
             JENKINS_USER="--user jenkins"

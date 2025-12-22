@@ -586,6 +586,25 @@ RUN . /opt/conda/etc/profile.d/conda.sh && \
     pip install triton
 ```
 
+### Issue 15: CUTLASS Backend Tests Running Without Proper Setup
+**Error**: `ModuleNotFoundError: No module named 'cutlass_cppgen'` and `Failed to import CUTLASS lib`
+
+**Root Cause**: CUTLASS backend tests (`inductor/test_cutlass_backend.py` and `inductor/test_cutlass_evt.py`) were being run in the default RHEL test configuration, but CUTLASS requires special setup:
+1. The `TORCHINDUCTOR_CUTLASS_DIR` environment variable must point to `third_party/cutlass`
+2. CUTLASS tests are normally only run in the `h100_cutlass_backend` test configuration (not `default`)
+3. The test infrastructure expects CUTLASS to be located in the workspace, not in the conda environment
+
+When these tests run without proper setup, they fail with import errors because cutlass_cppgen is not available.
+
+**Solution**: Exclude CUTLASS backend tests from RHEL test runs by adding to `_linux-test.yml`:
+```yaml
+elif [[ ${BUILD_ENVIRONMENT} == *"rhel"* ]]; then
+  # Exclude CUTLASS tests for RHEL builds (requires special CUTLASS setup not available on RHEL)
+  export PYTHON_TEST_EXTRA_OPTION="--exclude inductor/test_cutlass_backend inductor/test_cutlass_evt"
+```
+
+This follows the pattern where certain inductor tests (like test_cutlass_backend) are excluded from `test_inductor_core()` and only run in specialized test configurations.
+
 ---
 
 ## Testing
@@ -662,6 +681,7 @@ jobs:
   - Skip AWS authentication
   - Import images from local storage
   - Set SHM_OPTS to empty (avoid --shm-size with --ipc=host conflict)
+  - Exclude CUTLASS backend tests (requires special setup not available on RHEL)
   - Allow NVIDIA driver install errors
   - Skip teardown SSH wait
   - Skip upload-utilization-stats step (requires Python setup)
