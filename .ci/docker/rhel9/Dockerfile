@@ -144,11 +144,6 @@ ENV LDFLAGS="-fuse-ld=lld"
 ENV CFLAGS="-mf16c -mavx2"
 ENV CXXFLAGS="-mf16c -mavx2"
 
-# CUDA compiler flags for H200 GPU (compute capability 9.0)
-# --use_fast_math enables fast math operations including FP16
-# --extra-device-vectorization enables better vectorization for FP16
-ENV NVCC_FLAGS="--use_fast_math --extra-device-vectorization"
-
 # Set default conda environment for interactive use
 ENV CONDA_DEFAULT_ENV=${CONDA_ENV}
 RUN echo "conda activate ${CONDA_ENV}" >> ~/.bashrc
