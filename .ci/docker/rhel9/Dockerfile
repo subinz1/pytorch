@@ -138,6 +138,17 @@ ENV CUDA_HOME=/usr/local/cuda
 ENV CMAKE_LINKER="lld"
 ENV LDFLAGS="-fuse-ld=lld"
 
+# Set compiler flags for proper float16/half-precision support
+# -mf16c enables F16C instruction set for half-precision conversions on x86-64
+# -mavx2 enables AVX2 which is required for efficient FP16 operations
+ENV CFLAGS="-mf16c -mavx2"
+ENV CXXFLAGS="-mf16c -mavx2"
+
+# CUDA compiler flags for H200 GPU (compute capability 9.0)
+# --use_fast_math enables fast math operations including FP16
+# --extra-device-vectorization enables better vectorization for FP16
+ENV NVCC_FLAGS="--use_fast_math --extra-device-vectorization"
+
 # Set default conda environment for interactive use
 ENV CONDA_DEFAULT_ENV=${CONDA_ENV}
 RUN echo "conda activate ${CONDA_ENV}" >> ~/.bashrc
