@@ -688,6 +688,26 @@ export PYTHON_TEST_EXTRA_OPTION="--exclude ... export/test_export_opinfo.py::Tes
 
 **Impact**: This is a benign "failure" - the test actually works correctly now. The exclusion prevents the CI from flagging it as a failure.
 
+### Issue 20: Test Exclusion Syntax Error
+**Error**: `run_test.py: error: argument -x/--exclude: invalid choice: 'dynamo/test_activation_checkpointing.py::ActivationCheckpointingViaTagsTestsCUDA::test_pattern_matcher_cuda'`
+
+**Root Cause**: The `--exclude` argument in `run_test.py` only accepts predefined test file names from a fixed list, not specific test cases with `::` syntax. When we tried to exclude specific test cases like `test_pattern_matcher_cuda` using `--exclude file.py::TestClass::test_method`, the test runner rejected it as an invalid choice.
+
+PyTorch's test infrastructure has two different mechanisms:
+- `--exclude`: Only works for entire test files (e.g., `inductor/test_cutlass_backend`)
+- `-k`: Pytest's keyword expression matching for excluding specific test cases (e.g., `-k "not test_name"`)
+
+**Solution**: Updated the test exclusion in `_linux-test.yml` to use proper syntax:
+```bash
+export PYTHON_TEST_EXTRA_OPTION="--exclude inductor/test_cutlass_backend inductor/test_cutlass_evt -k 'not test_pattern_matcher_cuda and not test_strided_inputs_q_s0_k_s1_v_s1_do_s1_cuda_float16 and not test_fake_export___getitem___cpu_float32'"
+```
+
+This combines:
+- `--exclude` for entire test files (CUTLASS tests)
+- `-k` with boolean expressions for specific test cases
+
+**Impact**: This fix allows the test runner to correctly exclude both entire test files and specific test cases without syntax errors.
+
 ---
 
 ## Testing
