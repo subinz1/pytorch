@@ -69,4 +69,5 @@ jobs:
       docker-image: ${{ needs.rhel-9_6-py3_12-gcc11-build.outputs.docker-image }}
       test-matrix: ${{ needs.rhel-9_6-py3_12-gcc11-build.outputs.test-matrix }}
       use-gha: "1"
+      timeout-minutes: 600
     secrets: inherit
