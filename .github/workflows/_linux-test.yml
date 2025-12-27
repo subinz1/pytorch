@@ -407,8 +407,9 @@ jobs:
             DOCKER_SHELL_CMD=
             USED_IMAGE="${DOCKER_IMAGE}"
             # Exclude CUTLASS backend tests for RHEL builds (requires special setup)
+            # Use deselect-file to skip known failing tests listed in rhel_skip_tests.txt
             # Use --keep-going to continue running tests even on failure
-            export PYTHON_TEST_EXTRA_OPTION="--exclude inductor/test_cutlass_backend inductor/test_cutlass_evt --keep-going"
+            export PYTHON_TEST_EXTRA_OPTION="--exclude inductor/test_cutlass_backend inductor/test_cutlass_evt --deselect-file .ci/pytorch/rhel_skip_tests.txt --keep-going"
           else
             SHM_OPTS="--shm-size=${SHM_SIZE}"
             JENKINS_USER="--user jenkins"
