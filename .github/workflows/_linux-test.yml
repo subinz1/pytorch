@@ -406,8 +406,11 @@ jobs:
             JENKINS_USER=
             DOCKER_SHELL_CMD=
             USED_IMAGE="${DOCKER_IMAGE}"
+            # Exclude CUTLASS backend tests and flex attention tests for RHEL builds
+            # CUTLASS requires special setup not available on RHEL (see RHEL_CHANGES.md Issue 15)
+            # Flex attention tests fail with CUDA misalignment on float16 strided tensors (see RHEL_CHANGES.md Issue 18)
             # Use --keep-going to continue running tests even if other tests fail
-            export PYTHON_TEST_EXTRA_OPTION="--keep-going"
+            export PYTHON_TEST_EXTRA_OPTION="--exclude inductor/test_cutlass_backend inductor/test_cutlass_evt inductor/test_flex_attention --keep-going"
           else
             SHM_OPTS="--shm-size=${SHM_SIZE}"
             JENKINS_USER="--user jenkins"
