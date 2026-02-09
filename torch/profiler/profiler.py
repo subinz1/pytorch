@@ -129,6 +129,10 @@ class _KinetoProfile:
             When this argument is included the observer start() and stop() will be called for the
             same time window as PyTorch profiler.
         acc_events (bool): Enable the accumulation of FunctionEvents across multiple profiling cycles
+        post_processing_timeout_s (float): Optional timeout in seconds for post-processing profiler
+            results. In this context, post-processing happens after the profiling itself has finished.
+            If specified, event parsing will stop after this duration and return partial results. Useful
+            for handling large traces that may take too long to process.
 
 
     .. note::
@@ -143,16 +147,17 @@ class _KinetoProfile:
     def __init__(
         self,
         *,
-        activities: Optional[Iterable[ProfilerActivity]] = None,
+        activities: Iterable[ProfilerActivity] | None = None,
         record_shapes: bool = False,
         profile_memory: bool = False,
         with_stack: bool = False,
         with_flops: bool = False,
         with_modules: bool = False,
-        experimental_config: Optional[_ExperimentalConfig] = None,
-        execution_trace_observer: Optional[_ITraceObserver] = None,
+        experimental_config: _ExperimentalConfig | None = None,
+        execution_trace_observer: _ITraceObserver | None = None,
         acc_events: bool = False,
-        custom_trace_id_callback: Optional[Callable[[], str]] = None,
+        custom_trace_id_callback: Callable[[], str] | None = None,
+        post_processing_timeout_s: float | None = None,
     ) -> None:
         self.activities = set(activities) if activities else supported_activities()
         self.record_shapes = record_shapes
@@ -164,9 +169,10 @@ class _KinetoProfile:
         self.execution_trace_observer = execution_trace_observer
         self.acc_events = acc_events
         self.custom_trace_id_callback = custom_trace_id_callback
-        self.profiler: Optional[prof.profile] = None
+        self.post_processing_timeout_s = post_processing_timeout_s
+        self.profiler: prof.profile | None = None
         self.has_cudagraphs = False
-        self.mem_tl: Optional[MemoryProfileTimeline] = None
+        self.mem_tl: MemoryProfileTimeline | None = None
         self.use_device = None
         if ProfilerActivity.CUDA in self.activities:
             # pyrefly: ignore [bad-assignment]
@@ -212,6 +218,7 @@ class _KinetoProfile:
                 experimental_config=self.experimental_config,
                 acc_events=self.acc_events,
                 custom_trace_id_callback=self.custom_trace_id_callback,
+                post_processing_timeout_s=self.post_processing_timeout_s,
             )
         if (self.profiler is not None) and (not self.acc_events):
             _warn_once(
@@ -427,7 +434,7 @@ class _KinetoProfile:
         "Please use `torch.cuda.memory._record_memory_history` and `torch.cuda.memory._export_memory_snapshot` instead.",
         category=FutureWarning,
     )
-    def export_memory_timeline(self, path: str, device: Optional[str] = None) -> None:
+    def export_memory_timeline(self, path: str, device: str | None = None) -> None:
         """Export memory event information from the profiler collected
         tree for a given device, and export a timeline plot. There are 3
         exportable files using ``export_memory_timeline``, each controlled by the
@@ -562,7 +569,7 @@ def _default_schedule_fn(_: int) -> ProfilerAction:
 
 
 def tensorboard_trace_handler(
-    dir_name: str, worker_name: Optional[str] = None, use_gzip: bool = False
+    dir_name: str, worker_name: str | None = None, use_gzip: bool = False
 ):
     """
     Outputs tracing files to directory of ``dir_name``, then that directory can be
@@ -623,6 +630,9 @@ class profile(_KinetoProfile):
             When this argument is included the observer start() and stop() will be called for the
             same time window as PyTorch profiler. See the examples section below for a code sample.
         acc_events (bool): Enable the accumulation of FunctionEvents across multiple profiling cycles
+        post_processing_timeout_s (float): Optional timeout in seconds for post-processing profiler
+            results. If specified, event parsing will stop after this duration and return partial
+            results. Useful for handling large traces that may take too long to process.
         use_cuda (bool):
             .. deprecated:: 1.8.1
                 use ``activities`` instead.
@@ -725,20 +735,21 @@ class profile(_KinetoProfile):
     def __init__(
         self,
         *,
-        activities: Optional[Iterable[ProfilerActivity]] = None,
-        schedule: Optional[Callable[[int], ProfilerAction]] = None,
-        on_trace_ready: Optional[Callable[..., Any]] = None,
+        activities: Iterable[ProfilerActivity] | None = None,
+        schedule: Callable[[int], ProfilerAction] | None = None,
+        on_trace_ready: Callable[..., Any] | None = None,
         record_shapes: bool = False,
         profile_memory: bool = False,
         with_stack: bool = False,
         with_flops: bool = False,
         with_modules: bool = False,
-        experimental_config: Optional[_ExperimentalConfig] = None,
-        execution_trace_observer: Optional[_ITraceObserver] = None,
+        experimental_config: _ExperimentalConfig | None = None,
+        execution_trace_observer: _ITraceObserver | None = None,
         acc_events: bool = False,
         # deprecated:
-        use_cuda: Optional[bool] = None,
-        custom_trace_id_callback: Optional[Callable[[], str]] = None,
+        use_cuda: bool | None = None,
+        custom_trace_id_callback: Callable[[], str] | None = None,
+        post_processing_timeout_s: float | None = None,
     ) -> None:
         activities_set = set(activities) if activities else supported_activities()
         if use_cuda is not None:
@@ -767,6 +778,7 @@ class profile(_KinetoProfile):
             else ExecutionTraceObserver.build_execution_trace_obs_from_env(),
             acc_events=acc_events,
             custom_trace_id_callback=custom_trace_id_callback,
+            post_processing_timeout_s=post_processing_timeout_s,
         )
 
         if schedule:
@@ -779,10 +791,10 @@ class profile(_KinetoProfile):
         self.on_trace_ready = on_trace_ready
         self.step_num = 0
         self.current_action = self.schedule(self.step_num)
-        self.step_rec_fn: Optional[prof.record_function] = None
+        self.step_rec_fn: prof.record_function | None = None
 
         self.action_map: dict[
-            tuple[ProfilerAction, Optional[ProfilerAction]], list[Any]
+            tuple[ProfilerAction, ProfilerAction | None], list[Any]
         ] = {
             # key is (prev_action, current_action), value is action list corresponding to the state pair.
             (ProfilerAction.NONE, ProfilerAction.NONE): [],
@@ -915,7 +927,7 @@ class profile(_KinetoProfile):
             for action in action_list:
                 action()
 
-    def _stats(self) -> Optional[prof._ProfilerStats]:
+    def _stats(self) -> prof._ProfilerStats | None:
         if self.profiler is None:
             return None
         return self.profiler._stats
@@ -1016,7 +1028,7 @@ class ExecutionTraceObserver(_ITraceObserver):
             self._registered = _add_execution_trace_observer(output_file_path)
         return self
 
-    def get_resources_dir(self, can_create=False) -> Optional[str]:
+    def get_resources_dir(self, can_create=False) -> str | None:
         """
         Generates the resources directory for the generated kernels,
         or index tensor data or any other metadata that is required
@@ -1045,7 +1057,7 @@ class ExecutionTraceObserver(_ITraceObserver):
     @staticmethod
     def get_resources_dir_for_et_path(
         trace_path, create_dir: bool = False
-    ) -> Optional[str]:
+    ) -> str | None:
         work_dir, file_name = os.path.split(trace_path)
         resource_dir = os.path.join(
             work_dir, os.path.splitext(file_name)[0] + "_resources"
@@ -1154,7 +1166,7 @@ class ExecutionTraceObserver(_ITraceObserver):
         """
         self.unregister_callback()
 
-    def get_output_file_path(self) -> Optional[str]:
+    def get_output_file_path(self) -> str | None:
         """
         Returns the output file name or None.
         """

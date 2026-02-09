@@ -2,7 +2,7 @@
 AC rematerialize pass: Duplicates checkpointed nodes for backward, then DCE removes unused forward versions.
 """
 
-import warnings
+from typing import Any, overload
 
 import torch
 import torch.fx as fx
@@ -19,7 +19,7 @@ from torch._functorch.partitioners import (
 )
 
 
-def is_impure_node_for_dce(node):
+def is_impure_node_for_dce(node: fx.Node) -> bool:
     # Check for special collectives that should be treated as pure
     if not is_not_collective(node):
         # It's a collective (wait_tensor, all_gather_into_tensor, etc.)
@@ -48,6 +48,17 @@ def remat_using_tags_for_fwd_loss_bwd_graph(gm: fx.GraphModule) -> fx.GraphModul
     if not has_recomputable_ops(gm):
         return gm
 
+    # Find backward boundary and build ordering
+    bwd_start: int | None = None
+    order = {}
+    for idx, node in enumerate(gm.graph.nodes):
+        order[node] = idx
+        if _is_backward_node(node) and bwd_start is None:
+            bwd_start = idx
+
+    if bwd_start is None:
+        return gm
+
     if has_recomputable_rng_ops(gm):
         raise RuntimeError(
             "Activation checkpoint rematerializing in `forward-loss-backward` graph does not support RNG ops "
@@ -63,22 +74,6 @@ def remat_using_tags_for_fwd_loss_bwd_graph(gm: fx.GraphModule) -> fx.GraphModul
 
     force_save_bw_mutation_src(gm)
 
-    # Find backward boundary and build ordering
-    bwd_start: int | None = None
-    order = {}
-    for idx, node in enumerate(gm.graph.nodes):
-        order[node] = idx
-        if _is_backward_node(node) and bwd_start is None:
-            bwd_start = idx
-
-    if bwd_start is None:
-        warnings.warn(
-            "remat_using_tags_for_fwd_loss_bwd_graph: Graph has recomputable ops but no backward region. "
-            "This may indicate a forward-only graph (e.g., from nested compilation) or missing backward annotations. "
-            "Returning graph unchanged."
-        )
-        return gm
-
     new_graph = fx.Graph()
     env: dict[fx.Node, fx.Node] = {}
     recomputed_nodes: dict[fx.Node, fx.Node] = {}
@@ -87,13 +82,18 @@ def remat_using_tags_for_fwd_loss_bwd_graph(gm: fx.GraphModule) -> fx.GraphModul
     for node in list(gm.graph.nodes)[:bwd_start]:
         env[node] = new_graph.node_copy(node, lambda x: env[x])
 
-    def remat_input(x):
+    @overload
+    def remat_input(x: fx.Node) -> fx.Node: ...
+    @overload
+    def remat_input(x: Any) -> Any: ...
+
+    def remat_input(x: object) -> object:
         # fx.Node can have args that are primitive types (e.g. int, float, bool)
         if not isinstance(x, fx.Node):
             return x
         return recomputed_nodes.get(x, env[x])
 
-    def gather_checkpointed_deps(node: fx.Node, visited: set) -> None:
+    def gather_checkpointed_deps(node: fx.Node, visited: set[fx.Node]) -> None:
         if node in visited or node in recomputed_nodes:
             return
         visited.add(node)
@@ -113,7 +113,11 @@ def remat_using_tags_for_fwd_loss_bwd_graph(gm: fx.GraphModule) -> fx.GraphModul
         # This is not as inefficient as it looks, because we only add fresh dependencies
         # when they are not yet processed as recomputed nodes.
         for dep in sorted(deps, key=lambda n: order[n]):
-            assert dep not in recomputed_nodes, "We shouldn't have recomputed it before"
+            if dep in recomputed_nodes:
+                raise AssertionError(
+                    f"We shouldn't have recomputed {dep} before, "
+                    f"but found it in recomputed_nodes"
+                )
             dup = new_graph.node_copy(dep, remat_input)
             dup.name = dep.name + "_recomputed"
             recomputed_nodes[dep] = dup
