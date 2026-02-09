@@ -110,8 +110,11 @@ ENV PATH=/opt/conda/bin:${PATH}
 # Install CUDA and cuDNN
 RUN . /opt/conda/etc/profile.d/conda.sh && \
     conda activate ${CONDA_ENV} && \
+    rm -rf /var/cache/dnf/* && \
+    rm -f /etc/yum.repos.d/cuda*.repo && \
     dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo && \
     dnf clean all && \
+    dnf makecache && \
     dnf -y install cuda-toolkit-${CUDA_VERSION} && \
     conda install -y nvidia::cudnn cuda-version=${CUDNN_VERSION}
 
