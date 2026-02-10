@@ -516,6 +516,78 @@ rhel-9_6-py3_12-gcc11-test:
   uses: ./.github/actions/upload-utilization-stats
 ```
 
+### Issue 12: NVIDIA CUDA Repository Metadata Stale Cache
+**Error**: `Status code: 404 for https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/repodata/...`
+
+**Root Cause**: NVIDIA updates their CUDA repository regularly, removing old metadata files. When the DNF cache has stale references to these old metadata files (identified by SHA hashes in filenames), it tries to download files that no longer exist on NVIDIA's servers, resulting in 404 errors.
+
+**Solution**: Completely clear DNF cache and remove existing CUDA repository files before adding the repository in `.ci/docker/rhel9/Dockerfile`:
+```dockerfile
+RUN . /opt/conda/etc/profile.d/conda.sh && \
+    conda activate ${CONDA_ENV} && \
+    rm -rf /var/cache/dnf/* && \
+    rm -f /etc/yum.repos.d/cuda*.repo && \
+    dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo && \
+    dnf clean all && \
+    dnf makecache && \
+    dnf -y install cuda-toolkit-${CUDA_VERSION} && \
+    conda install -y nvidia::cudnn cuda-version=${CUDNN_VERSION}
+```
+
+This ensures:
+- All DNF cache is removed: `rm -rf /var/cache/dnf/*`
+- Old repo files are removed: `rm -f /etc/yum.repos.d/cuda*.repo`
+- Fresh metadata is built: `dnf makecache`
+
+### Issue 13: AWS OIDC Authentication Failure
+**Error**: `Error: Could not assume role with OIDC: Not authorized to perform sts:AssumeRoleWithWebIdentity`
+
+**Root Cause**: The _linux-build.yml and _linux-test.yml workflows attempt to authenticate with AWS using GitHub's OIDC provider to access ECR (Elastic Container Registry) and S3. Self-hosted RHEL runners don't have AWS credentials configured and don't need AWS access since they use local storage for Docker images and artifacts.
+
+**Solution**: Explicitly set `aws-role-to-assume` to empty string in `rhel-build-test.yml`:
+```yaml
+rhel-9_6-py3_12-gcc11-build:
+  needs: build-docker-image
+  name: rhel-9.6-py3.12-gcc11
+  uses: ./.github/workflows/_linux-build.yml
+  with:
+    runner_prefix: ""
+    runner: "test-runner-git-109-vpc"
+    build-environment: linux-rhel-9.6-py3.12-gcc11
+    docker-image-name: ci-image:pytorch-rhel-9.6-py3.12-gcc11
+    cuda-arch-list: "9.0"
+    aws-role-to-assume: ""  # Skip AWS authentication for self-hosted runner
+    test-matrix: |
+      { include: [
+        ...
+      ]}
+  secrets: inherit
+
+rhel-9_6-py3_12-gcc11-test:
+  name: rhel-9.6-py3.12-gcc11
+  uses: ./.github/workflows/_linux-test.yml
+  needs: rhel-9_6-py3_12-gcc11-build
+  with:
+    build-environment: linux-rhel-9.6-py3.12-gcc11
+    docker-image: ${{ needs.rhel-9_6-py3_12-gcc11-build.outputs.docker-image }}
+    test-matrix: ${{ needs.rhel-9_6-py3_12-gcc11-build.outputs.test-matrix }}
+    aws-role-to-assume: ""  # Skip AWS authentication for self-hosted runner
+    use-gha: "1"
+    timeout-minutes: 600
+  secrets: inherit
+```
+
+**Additional Fix Required:** The ecr-login action has a hardcoded fallback role that causes OIDC authentication to be attempted even when `aws-role-to-assume` is empty. Therefore, we must skip the entire ECR login step for RHEL in `_linux-build.yml`:
+```yaml
+- name: Login to ECR
+  if: inputs.build-environment != 'linux-s390x-binary-manywheel' && !contains(inputs.build-environment, 'rhel')
+  uses: ./.github/actions/ecr-login
+  with:
+    aws-role-to-assume: ${{ inputs.aws-role-to-assume }}
+```
+
+This completely bypasses the ECR login step for RHEL builds since they use local Docker image storage.
+
 ### Issue 12: Workspace Permission Changes Failing in Tests
 **Error**: `sudo chown -R 0 /var/lib/jenkins/workspace` failing with exit code 1
 
