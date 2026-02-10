@@ -160,7 +160,7 @@ jobs:
         if: inputs.build-environment != 'linux-s390x-binary-manywheel' && inputs.build-environment != 'linux-rhel-9.6-py3.12-gcc11'
 
       - name: Login to ECR
-        if: inputs.build-environment != 'linux-s390x-binary-manywheel'
+        if: inputs.build-environment != 'linux-s390x-binary-manywheel' && !contains(inputs.build-environment, 'rhel')
         uses: ./.github/actions/ecr-login
         with:
           aws-role-to-assume: ${{ inputs.aws-role-to-assume }}
