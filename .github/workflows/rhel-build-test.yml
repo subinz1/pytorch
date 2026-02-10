@@ -52,6 +52,7 @@ jobs:
       build-environment: linux-rhel-9.6-py3.12-gcc11
       docker-image-name: ci-image:pytorch-rhel-9.6-py3.12-gcc11
       cuda-arch-list: "9.0"
+      aws-role-to-assume: ""
       test-matrix: |
         { include: [
           { config: "default", shard: 1, num_shards: 5, runner: "test-runner-git-109-vpc" },
@@ -70,6 +71,7 @@ jobs:
       build-environment: linux-rhel-9.6-py3.12-gcc11
       docker-image: ${{ needs.rhel-9_6-py3_12-gcc11-build.outputs.docker-image }}
       test-matrix: ${{ needs.rhel-9_6-py3_12-gcc11-build.outputs.test-matrix }}
+      aws-role-to-assume: ""
       use-gha: "1"
       timeout-minutes: 600
     secrets: inherit
