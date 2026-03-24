@@ -107,7 +107,7 @@ RUN wget --no-check-certificate https://github.com/conda-forge/miniforge/release
 # Set PATH for conda
 ENV PATH=/opt/conda/bin:${PATH}
 
-# Install CUDA and cuDNN
+# Install CUDA, cuDNN, and NCCL
 RUN . /opt/conda/etc/profile.d/conda.sh && \
     conda activate ${CONDA_ENV} && \
     rm -rf /var/cache/dnf/* && \
@@ -117,6 +117,19 @@ RUN . /opt/conda/etc/profile.d/conda.sh && \
     dnf makecache && \
     dnf -y install cuda-toolkit-${CUDA_VERSION} && \
     conda install -y nvidia::cudnn cuda-version=${CUDNN_VERSION}
+
+# Build and install NCCL from source (matching upstream CI pinned version)
+RUN git clone -b v2.29.7-1 --depth 1 https://github.com/NVIDIA/nccl.git && \
+    cd nccl && \
+    make -j$(nproc) src.build CUDA_HOME=/usr/local/cuda && \
+    cp -a build/include/* /usr/local/cuda/include/ && \
+    cp -a build/lib/* /usr/local/cuda/lib64/ && \
+    cd .. && \
+    rm -rf nccl && \
+    ldconfig
+
+# Use system NCCL instead of building from third_party/nccl
+ENV USE_SYSTEM_NCCL=1
 
 # Install sccache and PyTorch build dependencies via conda/pip
 # Download and install all requirements from upstream PyTorch requirements-ci.txt
