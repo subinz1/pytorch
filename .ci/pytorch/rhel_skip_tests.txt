@@ -1,0 +1,41 @@
+# Tests to skip for RHEL 9.6 builds
+# These tests fail consistently on RHEL with H200 GPU and require further investigation
+
+# Issue 17: H200 selects cuDNN Attention instead of Flash Attention
+dynamo/test_activation_checkpointing.py::ActivationCheckpointingViaTagsTestsCUDA::test_pattern_matcher_cuda
+
+# Triton kernel selection issue - incorrect convolution results
+inductor/test_select_algorithm.py::TestSelectAlgorithm::test_convolution1
+
+# Unexpected success - test expected to fail but passes with RHEL improvements
+inductor/test_torchinductor_dynamic_shapes.py::TestInductorDynamicCPU::test_unbacked_reduction_cpu
+
+# CPU float16 precision issues with RHEL compiler flags
+inductor/test_torchinductor_opinfo.py::TestInductorOpInfoCPU::test_comprehensive__native_batch_norm_legit_cpu_float16
+inductor/test_torchinductor_opinfo.py::TestInductorOpInfoCPU::test_comprehensive_nn_functional_interpolate_linear_cpu_float16
+inductor/test_torchinductor_opinfo.py::TestInductorOpInfoCPU::test_comprehensive_to_sparse_cpu_bool
+inductor/test_torchinductor_opinfo.py::TestInductorOpInfoCPU::test_comprehensive_trapz_cpu_float16
+inductor/test_torchinductor_opinfo.py::TestInductorOpInfoCPU::test_comprehensive__batch_norm_with_update_cpu_float16
+inductor/test_torchinductor_opinfo.py::TestInductorOpInfoCPU::test_comprehensive_cross_cpu_float16
+inductor/test_torchinductor_opinfo.py::TestInductorOpInfoCPU::test_comprehensive_histc_cpu_float16
+inductor/test_torchinductor_opinfo.py::TestInductorOpInfoCPU::test_comprehensive_nansum_cpu_float16
+inductor/test_torchinductor_opinfo.py::TestInductorOpInfoCPU::test_comprehensive_native_batch_norm_cpu_float16
+inductor/test_torchinductor_opinfo.py::TestInductorOpInfoCPU::test_comprehensive_nn_functional_interpolate_trilinear_cpu_float16
+inductor/test_torchinductor_opinfo.py::TestInductorOpInfoCPU::test_comprehensive_nn_functional_soft_margin_loss_cpu_float16
+inductor/test_torchinductor_opinfo.py::TestInductorOpInfoCPU::test_comprehensive_to_sparse_cpu_int64
+
+# DataLoader segfault tests
+test_dataloader.py::TestDataLoader::test_segfault
+test_dataloader.py::TestDataLoaderPersistentWorkers::test_segfault
+
+# Multi-dtype CUDA foreach operations
+test_foreach.py::TestForeachCUDA::test_foreach_copy_with_multi_dtypes_large_input_cuda
+
+# FP8 scaled matrix multiplication support
+test_decomp.py::TestDecompCUDA::test_comprehensive_torch__scaled_mm_v2_cuda_float8_e4m3fn
+
+# CPU attention mask test with specific parameters
+test_transformers.py::TestSDPACpuOnlyCPU::test_scaled_dot_product_fused_attention_mask_vs_math_cpu_fused_kernel0_float32_batch_size_12_q_seq_len_1030_kv_seq_len_17_n_head_1_head_dim_8_mask_dim_4_bool_mask_True_train_True_casual_False_set_attn_mask_True_cpu_float32
+
+# Numba integration test
+test_numba_integration.py::TestNumbaIntegration::test_array_adaptor
