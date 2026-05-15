@@ -1,0 +1,32 @@
+name: test-rhel-runner
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-runner:
+    if: github.repository_owner == 'pytorch'
+    name: Test RHEL Runner
+    runs-on: linux.rhel9
+    steps:
+      - name: Check runner
+        run: |
+          echo "=== Runner Information ==="
+          echo "Runner OS: $(uname -a)"
+          echo "Runner hostname: $(hostname)"
+          echo "Python version: $(python3 --version)"
+          echo "GCC version: $(gcc --version | head -1)"
+
+      - name: Check RHEL version
+        run: |
+          cat /etc/redhat-release || echo "Not a RHEL system"
+          cat /etc/os-release || true
+
+      - name: Check GPU
+        run: |
+          nvidia-smi || echo "No GPU available"
+
+      - name: Check container runtime
+        run: |
+          docker --version || podman --version
+          docker ps -a || true
